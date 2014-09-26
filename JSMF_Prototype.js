@@ -1,3 +1,12 @@
+function Model(name) {
+    this.__name = name;
+    this.modellingElements={};   
+}
+
+Model.prototype.setModellingElements = function(Class) {
+    this.modellingElements[Class.__name] = Class;
+};
+
 //M2
 function Class(name) {
     this.__name = name;
@@ -11,7 +20,7 @@ Class.prototype.setAttribute = function (name, type) {
     this.__attributes[name] = type;
 };
 
-
+//Relation nature: Composition? Inheritance? etc...
 Class.prototype.setReference = function (name, type, cardinality, opposite) {
     // verifier si le nom n'est pas déjà pris, -> exception
     this.__references[name] = {
@@ -27,38 +36,44 @@ Class.prototype.setReference = function (name, type, cardinality, opposite) {
 function makeAssignation(ob,index) {
     return function(param) {
         ob[index]=param;
-        //console.log(index, param)
     }
 };
 
-function makeReference(ob,index) {
+function makeReference(ob,index, type, card) {
     return function(param) { 
-        //CheckCardinality
         //checkType
+        
+        //CheckCardinality
+        var elementsinrelation = ob[index].length; //Check number of elements
+           //Warning check card value... seems fuzzy
+        
+        if(card==1 && elementsinrelation >= 1) {
+            console.log("error trying to assign a collection to a single element");
+        }
+        //console.log(card);
         ob[index].push(param);
-        console.log(index,param);
     }
 };
 
 Class.prototype.newInstance = function (name) {
     var result =  {};//new Class(name);
-	console.log(result);
     var self = this;
     //create setter for attributes
     for (var i in this.__attributes) {
         result[i] = new this.__attributes[i]();
-        console.log(i);
         result["set"+i] = makeAssignation(result,i);	
     }
     //create setter for references
     for (var j in this.__references) {
-        result[j] = [];//check type new this.__references[j].type();
-        console.log(this.__references[j].type);
-        result["set"+j] = makeReference(result,j);
+        result[j] = [];
+        var type = this.__references[j].type;
+        var card = this.__references[j].card;
+       // console.log(this.__references[j].card);
+        result["set"+j] = makeReference(result,j, type, card);
     }
     
     result.conformsTo = function() {
-        return self;
+        return self; //To be Checked
     };
     return result;
 };
@@ -77,7 +92,11 @@ Transition.setReference("dest", State, 1);
 
 var s = State.newInstance("actorDetails");
 var transit = Transition.newInstance("transit");
-console.log(actorDetails);
+var transitbis = Transition.newInstance("transitbis");
 s.setname("t");
-s.setSuperClass(State);
 s.settransition(transit);
+s.settransition(transitbis);
+s.setSuperClass(State);
+//s.setSuperClass(Transition); // will return an error
+//s.settransition(transit);
+//console.log(s);
