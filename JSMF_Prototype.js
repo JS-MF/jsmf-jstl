@@ -1,3 +1,6 @@
+//DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
+//Natural => Formal
+
 function Model(name) {
     this.__name = name;
     this.modellingElements={};   
@@ -7,6 +10,7 @@ Model.prototype.setModellingElements = function(Class) {
     this.modellingElements[Class.__name] = Class;
 };
 
+//
 //M2
 function Class(name) {
     this.__name = name;
@@ -20,6 +24,7 @@ Class.prototype.setAttribute = function (name, type) {
     this.__attributes[name] = type;
 };
 
+//WARNING
 Class.prototype.conformsTo = function() {
     var result = new Class();
     result = this;
@@ -34,15 +39,22 @@ Class.prototype.setReference = function (name, type, cardinality, opposite) {
         "type": type,
          "card": cardinality
     };
+	//To be TESTED
     if (opposite !== undefined) {
         var tmp = this.__references[name];
         tmp.opposite = opposite;
     }
 };
 
-function makeAssignation(ob,index) {
+function makeAssignation(ob,index, attype) {
+	//if attype = primitive JS type else ...
+	var type = new attype;
     return function(param) {
-        ob[index]=param;
+		if(param.__proto__ == type.__proto__) {
+			ob[index]=param;
+        } else {
+            console.log("Assigning wrong type: "+param.__proto__+" expected "+type.__proto__);
+        }
     };
 }
 
@@ -50,7 +62,7 @@ function makeAssignation(ob,index) {
 function makeReference(ob,index, type, card) {
     return function(param) { 
         //checkType
-        console.log(type, param.conformsTo()); 
+      //console.log(type, param.conformsTo()); 
         if(type==param.conformsTo()) {
            // console.log("correct type assignation");
         } else {
@@ -78,21 +90,21 @@ Class.prototype.newInstance = function (name) {
     //create setter for attributes
     for (var i in this.__attributes) {
         result[i] = new this.__attributes[i]();
-        result["set"+i] = makeAssignation(result,i);	
+		var attype = this.__attributes[i];
+        result["set"+i] = makeAssignation(result,i, attype);	
     }
     //create setter for references
     for (var j in this.__references) {
         result[j] = [];
         var type = this.__references[j].type;
         var card = this.__references[j].card;
-       // console.log(this.__references[j].card);
         result["set"+j] = makeReference(result,j, type, card);
     }
     return result;
 };
 
 // M1 -- TESTS
-var State = new Class("State"); // instanciation ??
+var State = new Class("State"); //other instanciaitons ? create...
 var Transition = new Class("Transition");
 
 State.setAttribute("name", String);
@@ -108,8 +120,18 @@ var transit = Transition.newInstance("transit");
 var transitbis = Transition.newInstance("transitbis");
 s.setname("t");
 s.settransition(transit);
-s.settransition(s2); // will return an error wrong assignation 
-s.setSuperClass(State);
+//s.settransition(s2); // will return an error wrong assignation 
+console.log(State.__proto__);
+console.log(State.prototype);
+//s.setSuperClass(State);
+
 //s.setSuperClass(Transition); // will return an error
 //s.settransition(transit);
 //console.log(s);
+
+//Create Meta-class
+/*var Entity = new Class("entity");
+Entity.setAttribute("attribute", {});
+
+var e = Entity.newInstance("e");
+e.setattribute({"name":String}); */
