@@ -17,10 +17,6 @@ resolve: function(ModelElement) {
 	resolveId(ModelElement);
 },
 
-persistRelation : function(ModelElement) {
-	dirtyMethod(ModelElement);
-},
-
 deleteElement : function(ModelElement){
 	deleteAllNodes(ModelElement);
 },
@@ -68,9 +64,9 @@ function resolveId(ModelElement)  {
 	}
 	db.cypherQuery('MATCH (n) WHERE '+queryPart+' RETURN n', null, function (err, result) {	
 			console.log('MATCH (n) WHERE '+queryPart+' RETURN n');
-			for(i in result.data) {
-				console.log(result.data[i]._id);
-			}
+			//for(i in result.data) {
+			//	console.log(result.data[i]._id);
+			//}
 		if(result.data.length!=0) {
 			if(result.data.length==1) {
 				return result.data[0]._id;
@@ -119,7 +115,7 @@ function deleteAllNodes(ModelElement) {
 
 function saveModel(Model) {
 	//building element list
-	var pushObject = {};
+
 	var pushRelation = {};
 	modelElements = [];
 	for(meta in Model.modellingElements) {
@@ -129,8 +125,7 @@ function saveModel(Model) {
 	}
 	//create node before references, using async lib
 	async.each(modelElements, function(element, callback) {	
-	//Insert a node conforms to the model schema (attributes only
-		inspect(element);
+		var pushObject = {};
 		for(i in element.conformsTo().__attributes) {
 			pushObject[i] = element[i];
 		}
@@ -141,19 +136,17 @@ function saveModel(Model) {
 					throw err;
 				} else {
 					idSource = result._id;
-					console.log(idSource);
 					console.log('Object of Type: '+element.conformsTo().__name+' Added');
 					callback();
 				}
 		});		
 	}, function (res) {
-		console.log(res);
-		console.log("node_creation_finished");
+		console.log("All nodes pushed into Neo4J");
 		async.each(modelElements, function(element, callback5) {
 			console.dir("Elements: "+element);
-			createReferencesBVERSION(element,callback5);//createReferences(element,callback5);
+			createReferencesBVERSION(element,callback5);
 		}, function(res2) {
-			console.log("Model pushed into Neo4J");
+			console.log("Model pushed fully into Neo4J");
 		});
 	});
 }
@@ -210,13 +203,13 @@ function createReferencesBVERSION(ModelElement, callback5) {
 			}
 	}
 	
-	inspect(targetElements);
+	//inspect(targetElements);
 	
 	//if referenceElement is not empty
 	async.parallel( 
 	[ function(callback1) {
 		// Get Source ID if references...
-		console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
+//debug //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
 		db.cypherQuery('MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n', null, function (err, result) {	
 			if(result.data.lenght!=0) {
 				//Always return the first value (oldest node)
@@ -229,30 +222,30 @@ function createReferencesBVERSION(ModelElement, callback5) {
 				//console.log(element);
 					queryTarget = queryGeneration(element.el);
 					queryTargetType = "`"+element.el.conformsTo().__name+"`";
-					console.log(' TARGET! MATCH (n:'+queryTargetType+') WHERE '+queryTarget+' RETURN n');
+//debug //console.log(' TARGET! MATCH (n:'+queryTargetType+') WHERE '+queryTarget+' RETURN n');
 					db.cypherQuery('MATCH (n:'+queryTargetType+') WHERE '+queryTarget+' RETURN n', null, function (err, result) {	
 						if(result.data.length!=0) {
 							idTargets.push({label: element.label, el:result.data[0]._id});
-							console.log(idTargets);
 							idTarget = result.data[0]._id;
 						} else {console.log("Error object not found in Database");}
 							callback2();
 						});
 					}, function(err) {
-						console.log(err);
+						if(err)  {
+							console.log(err);
+						}
 						callback3();
 					});
 	}], function(err) {
 		//console.log(idTargets);	
 		async.each(idTargets, function(relation, callback6) {
-			console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
-			//callback6();
+//DEbug //console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
 			 db.insertRelationship(idSource,relation.el, relation.label,{}, function(err, result){ // let see if transition should support some properties... 
 				if(err) {
 					throw err;
 				} else {
 					relationid = result._id;
-					console.log("Reference created "+relationid);
+					//console.log("Reference created "+relationid);
 					callback6();
 				}
 			});// end dbInsert 

@@ -1,10 +1,7 @@
-/**
-Inheritance to be done
-Resolve reference in a model from a collection of (reference,type)
-*/
-
 var modelDB = require('./JSMFNeo4j.js');
 var _ = require('underscore');
+var inspect = require('eyes').inspector({maxLength: 9000});
+
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
 //Natural => Formal
@@ -57,6 +54,11 @@ Model.prototype.save = function() {
 }
 
 //M2
+function ModelElement(name) {
+	this.__name = name;
+}
+
+
 function Class(name) {
     this.__name = name;
     this.__attributes = {};
@@ -64,10 +66,45 @@ function Class(name) {
 // name = string, type = string
 }
 
+
+function Attribute(name,type, ParentClass) {
+	this.name = name;
+	this.type = type;
+	this.parent = ParentClass;
+}
+
+function Reference(name, type, cardinality, opposite, ParentClass) {
+	this.name = name;
+    this.type= type; //reference any reference / attribute
+    this.card= cardinality;
+	this.parent = ParentClass;
+	//To be TESTED
+    if (opposite !== undefined) {
+        var tmp = this.__references[name];
+        tmp.opposite = opposite;
+    }
+}
+
 Class.prototype.setAttribute = function (name, type) {
-     if(_.contains(this.__attributes, name)) {
+	//inspect(this.__attributes);
+    if(_.contains(this.__attributes, name)) { // ERROR condition not verifiable
+		console.log("Attribute name already taken"); //call of the function with arbitrary name? / id?
 	} else {
-		this.__attributes[name] = type;
+		this.__attributes[name] = new Attribute(name,type, this);
+	}
+};
+
+Model.prototype.addAttribute = function (attribute) {
+	//if not already added
+	this.__attributes[attribute.name]= attribute;
+}
+
+//Relation nature: Composition? Inheritance? etc...
+Class.prototype.setReference = function (name, type, cardinality, opposite) {
+	if(_.contains(this.__references, name)) {
+		console.log("Reference name already taken"); //call of the function with arbitrary name? / id?
+	} else {
+		this.__references[name] = new Reference(name,type,cardinality,opposite, this);
 	}
 };
 
@@ -77,20 +114,6 @@ Class.prototype.conformsTo = function() {
     result = this;
     //console.log(Class.prototype);
     return Class.prototype;
-};
-
-//Relation nature: Composition? Inheritance? etc...
-Class.prototype.setReference = function (name, type, cardinality, opposite) {
-    // verifier si le nom n'est pas déjà pris, -> exception
-    this.__references[name] = {
-        "type": type,
-         "card": cardinality
-    };
-	//To be TESTED
-    if (opposite !== undefined) {
-        var tmp = this.__references[name];
-        tmp.opposite = opposite;
-    }
 };
 
 function makeAssignation(ob,index, attype) {
@@ -112,7 +135,7 @@ function makeReference(ob,index, type, card) {
 		if(card==1 && elementsinrelation >= 1) {
 				console.log("error trying to assign multiple elements to a single reference");
 			} else {
-			if(type === Class) { //bypasscheckType
+			if(type === Class) { //bypasscheckType => generic modelling elements or reference to metamodel element
 				//console.log("Generic Type");
 				ob[index].push(param);				
 			} else {
@@ -140,8 +163,8 @@ Class.prototype.newInstance = function (name) {
     var self = this;
     //create setter for attributes
     for (var i in this.__attributes) {
-        result[i] = new this.__attributes[i]();
-		var attype = this.__attributes[i];
+        result[i] = new this.__attributes[i].type(); //added .type()
+		var attype = this.__attributes[i].type; // added .type
         result["set"+i] = makeAssignation(result,i, attype);	
     }
     //create setter for references
@@ -151,7 +174,8 @@ Class.prototype.newInstance = function (name) {
         var card = this.__references[j].card;
         result["set"+j] = makeReference(result,j, type, card);
     }
-
+	
+	
     // Assign the "type" to which M1 class is conform to.
     result.conformsTo = function() {
          return self; 
@@ -167,14 +191,20 @@ var Transition = new Class("Transition");
 var FSMmodel = new Model("FSMmodel");
 FSMmodel.setReferenceModel(M2FSM);
 
-M2FSM.setModellingElements(State);
-M2FSM.setModellingElements(Transition);
+M2FSM.setModellingElement(State);
+M2FSM.setModellingElement(Transition); //use setModellingElements 
 
 State.setAttribute("name", String);
 State.setAttribute("id", String);
-//State.setAttribute("self", State); // throw an error => see function for attributes
+//State.setAttribute("self", State); // throw an error => create type for classes : new Class("")? or defining primitve types?
+
+//State.setAttribute("name", Boolean); //ERROR should throw an error name already taken
+
 State.setReference("transition", Transition, -1);
 //State.setReference("SuperClass", Class.prototype, 1); /For Test purpose should work
+
+//State.setReference("transition", State, -1); //ERROR should throw an error name for reference already taken
+
 Transition.setAttribute("name", String);
 //Transition.setReference("source", State, 1);
 Transition.setReference("dest", State, 1);
@@ -187,25 +217,31 @@ transit.setname("Page Transition with id");
 transitbis.setname("Transition Bis");
 s.setname("actorSearch");
 s2.setname("actorDetails");
+
 transit.setdest(s2);
-s.settransition(transit);
-s.settransition(transitbis);
-s2.settransition(transitbis);
 transitbis.setdest(s);
 
+s.settransition(transit);
+//s.settransition(transitbis);
+s2.settransition(transitbis);
+
+
 // Adding FSM model elements to the FSM Model conforms to FSM Metamodel
-FSMmodel.setModellingElements(s);
-FSMmodel.setModellingElements(s2);
-FSMmodel.setModellingElements(transit);
-FSMmodel.setModellingElements(transitbis);
+FSMmodel.setModellingElement(s);
+FSMmodel.setModellingElement(s2);
+FSMmodel.setModellingElement(transit);
+FSMmodel.setModellingElement(transitbis);
+
 
 //console.log(FSMmodel.modellingElements);
 //modelDB.saveModel(M2FSM); //WARNING curreently not working
 modelDB.saveModel(FSMmodel);
 
+
 */
 
-/* Display all model elements in a model
+//Display all the model elements inside a model
+/*
 for (i in FSMmodel.modellingElements) {
 	//console.log(FSMmodel.modellingElements[i]);
 	var modelElements = FSMmodel.modellingElements[i] //ModelElem = tab of modelling elements
@@ -219,8 +255,8 @@ for (i in FSMmodel.modellingElements) {
 			console.log(att, element[att]);
 		}
 	}
-} */
-
+} 
+*/
 
 
 // Should be equivalent to modelDB.SaveModel
@@ -295,6 +331,9 @@ z.setfrom(low);
 z.setfrom(mega);
 console.log(z.from);
 */
+
+
+
 
 module.exports = {
 
