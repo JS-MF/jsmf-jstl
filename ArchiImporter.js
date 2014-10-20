@@ -125,10 +125,6 @@ fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
 			}
 		}
 	}
-	
-// Save Model to the DB - WARNING currently it is not updating but duplicating nodes into DB!!!!!
-ArchiSante.save();	
-
 // WARNING IN CASE OF NON RESOLVABLE REFERENCE use XPATH, KEEP THE LINKS OF UNDEFINED ELEMENT AND RESOLVE THEM AT THE END.	
 //console.log(idReference);
 	/* get element with Xpath... but is it necessary? yes maybe for element that have not been created yet!
@@ -136,4 +132,129 @@ ArchiSante.save();
 		var IdRef = referencedNodes[0].getAttribute("id");
 	*/	
 // END WARNING	
+	
+	
+// Save Model to the DB - WARNING currently it is not updating but duplicating nodes into DB!!!!!
+//ArchiSante.save();
+	
+// REFACTORING of model to passe from: Source <- Relation -> Target to Source -> Target
+var RefactoredM2Archi = new Model("ArchiRefactored");
+
+var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
+ArchiSanteRefactored.setReferenceModel(RefactoredM2Archi);
+//console.log(ArchiSanteRefactored);
+var TabResolution = [];
+var LinkResolve={};
+
+_.each(ArchiSante.modellingElements,
+function(element, index,list){
+	_.each(element, 
+	function(el1,ind1,list1) {
+		//console.log(index,el1);
+		if(el1.source!=undefined && el1.target!=undefined) {
+			var sourceOb = el1.source[0];
+			var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
+			//modify the metamodel in order to add the relation
+			var M2source = sourceOb.conformsTo(); // 
+			M2source.setReference(index,targetOb.conformsTo(),-1);
+			var newObject = M2source.newInstance("T");
+			
+			//Assign the value to the newobject (do not use newObject = sourceOb);
+			ModelCopy(sourceOb,newObject);
+			
+			LinkResolve= {
+						origin:sourceOb,
+						target:newObject, 
+						reference:index,
+						referee:targetOb
+						};
+						
+			TabResolution.push(LinkResolve);
+			//if not already present add it to the model refactored
+			var Z = isPresent(newObject, ArchiSanteRefactored);
+			if(Z!=undefined) {
+				//Do nothing 
+				console.log("Present!");
+			} else {
+				ArchiSanteRefactored.setModellingElement(newObject);
+			}
+		} 
+	});		//4 Add the reference to the new model			
+			//ArchiSanteRefactored.setModellingElement(newObject); //that is not erasing the other elements		
+});	
+
+MatchedSources = [];
+MatchedSources = _.map(TabResolution, function(source) { 
+	return source.origin;
 });
+
+MatchedM2 = [];
+MatchedM2= _.map(TabResolution, function(source) { 
+	return source.target.conformsTo();
+});
+
+_.each(TabResolution, 
+	function(el1,ind1) {
+	//search for existing OR transforms$
+	functionName = "set"+el1.reference;
+	if(_.contains(MatchedSources,el1.referee)) {
+		targeted= _.find(TabResolution, function(current) {
+			if(current.origin==el1.referee) { return current.target;}
+		});
+			//console.log(targeted.target);
+		el1.target[functionName](targeted.target);
+	//The object is not yet transformed in the new metamodel (Leaf of associations)
+	} else {
+		//console.log("LeafObject");
+		//target must of an instance of the new metamodel
+		M2target=_.find(MatchedM2, function(current) { 
+			return current.__name == el1.referee.conformsTo().__name;
+		});
+		newTarget= M2target.newInstance("newtarget");
+		ModelCopy(el1.referee,newTarget);
+		el1.target[functionName](newTarget);
+		ArchiSanteRefactored.setModellingElement(newTarget);
+	}
+	
+});
+
+//WARNING address Objects non matched!!!
+
+//Save Refactored model
+ArchiSanteRefactored.save();
+	
+});
+
+//Change it by a boolean expression...
+function isPresent(ModelElement, TModel) {
+	//Create the indexM for getting just the subset of elements that have the same (meta)type of ModelElement (i.e., indexation by metaclass name)
+		var indexM = ModelElement.conformsTo().__name;
+		var result= _.find(TModel.modellingElements[indexM],
+			function(current){ 
+				return current == ModelElement;
+			});
+		return result;			
+}
+
+//Should be REPORTED AS HELPER or JSMF_UTIL IN JSMF PROTOTYPE
+//Copy the element which are the same from sourceME to targetME without changing the metaclass of Source and Target elements
+function ModelCopy(SourceME,TargetME) {
+	_.each(SourceME.conformsTo().__attributes, function(element,index,list) {
+		if(TargetME.hasOwnProperty(index)) {
+			 var setValue = "set"+index;
+			TargetME[setValue](SourceME[index]); // or TargetME[index]=SourceME[index] => prefere the current solution because its check name unicity and attribute types!
+		}
+	});
+	//DO the same for the references
+	//_.each(SourceME.conformsTo()._references, function(element,index,list) { 
+	// DO the affectation of references elements
+	//});
+}
+
+
+function Remove(TModel, ModelElement) {
+	var indexM2 = ModelElement.conformsTo().__name;
+	var indexRM=_.indexOf(TModel.modellingElements[indexM2],ModelElement);
+	console.log(indexRM);
+		TModel.modellingElements[indexM2].splice(indexRM,1);
+}
