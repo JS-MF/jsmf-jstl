@@ -5,225 +5,228 @@ var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF
 var _ = require('underscore');
 var inspect = require('eyes').inspector({maxLength: 9000});
 
-var ModelE = [];
+function importArchi(filepath){
+    var ModelE = [];
 
-//Build ArchiMateMetamodel => should be built from M2.ecore file (and restricted to elements of interests - reduced viewpoint).
-var M2Archi= new Model("Archi");
-var BusinessActor = new Class("BusinessActor");
-BusinessActor.setAttribute("name", String);
-BusinessActor.setAttribute("id", String);
-ModelE.push(BusinessActor);
-var BusinessRole = new Class("BusinessRole");
-BusinessRole.setAttribute("name", String);
-BusinessRole.setAttribute("id", String);
-ModelE.push(BusinessRole);
-var BusinessService = new Class ("BusinessService");
-BusinessService.setAttribute("name", String);
-BusinessService.setAttribute("id", String);
-ModelE.push(BusinessService);
-var BusinessFunction = new Class ("BusinessFunction");
-ModelE.push(BusinessFunction);
-BusinessFunction.setAttribute("name", String);
-BusinessFunction.setAttribute("id", String);
-var BusinessObject = new Class ("BusinessObject");
-BusinessObject.setAttribute("name", String);
-BusinessObject.setAttribute("id", String);
-ModelE.push(BusinessObject);
+    //Build ArchiMateMetamodel => should be built from M2.ecore file (and restricted to elements of interests - reduced viewpoint).
+    var M2Archi= new Model("Archi");
+    var BusinessActor = new Class("BusinessActor");
+    BusinessActor.setAttribute("name", String);
+    BusinessActor.setAttribute("id", String);
+    ModelE.push(BusinessActor);
+    var BusinessRole = new Class("BusinessRole");
+    BusinessRole.setAttribute("name", String);
+    BusinessRole.setAttribute("id", String);
+    ModelE.push(BusinessRole);
+    var BusinessService = new Class ("BusinessService");
+    BusinessService.setAttribute("name", String);
+    BusinessService.setAttribute("id", String);
+    ModelE.push(BusinessService);
+    var BusinessFunction = new Class ("BusinessFunction");
+    ModelE.push(BusinessFunction);
+    BusinessFunction.setAttribute("name", String);
+    BusinessFunction.setAttribute("id", String);
+    var BusinessObject = new Class ("BusinessObject");
+    BusinessObject.setAttribute("name", String);
+    BusinessObject.setAttribute("id", String);
+    ModelE.push(BusinessObject);
 
-var Driver = new Class ("Driver");
-Driver.setAttribute("name", String);
-Driver.setAttribute("id", String);
-ModelE.push(Driver);
-var Goal = new Class ("Goal");
-Goal.setAttribute("name", String);
-Goal.setAttribute("id", String);
-ModelE.push(Goal);
-var Assessment = new Class ("Assessment"); //Assessment
-Assessment.setAttribute("name", String);
-Assessment.setAttribute("id", String);
-ModelE.push(Assessment);
+    var Driver = new Class ("Driver");
+    Driver.setAttribute("name", String);
+    Driver.setAttribute("id", String);
+    ModelE.push(Driver);
+    var Goal = new Class ("Goal");
+    Goal.setAttribute("name", String);
+    Goal.setAttribute("id", String);
+    ModelE.push(Goal);
+    var Assessment = new Class ("Assessment"); //Assessment
+    Assessment.setAttribute("name", String);
+    Assessment.setAttribute("id", String);
+    ModelE.push(Assessment);
 
-var AggregationRelationship = new Class ("AggregationRelationship");
-AggregationRelationship.setAttribute("id", String);
-AggregationRelationship.setReference("source", Class, 1);
-AggregationRelationship.setReference("target", Class, 1);
-ModelE.push(AggregationRelationship);
-var CompositionRelationsship = new Class ("CompositionRelationship");
-CompositionRelationsship.setReference("source", Class, 1);
-CompositionRelationsship.setReference("target", Class, 1);
-ModelE.push(CompositionRelationsship);
-var InfluenceRelationship = new Class ("InfluenceRelationship");
-InfluenceRelationship.setReference("source", Class, 1);
-InfluenceRelationship.setReference("target", Class, 1);
-ModelE.push(InfluenceRelationship);
-var AssociationRelationship = new Class ("AssociationRelationship");
-AssociationRelationship.setReference("source", Class, 1);
-AssociationRelationship.setReference("target", Class, 1);
-ModelE.push(AssociationRelationship);
-var SpecialisationRelationship  = new Class ("SpecialisationRelationship");
-SpecialisationRelationship.setReference("source", Class, 1);
-SpecialisationRelationship.setReference("target", Class, 1);
-ModelE.push(SpecialisationRelationship);
-var AssigmentRelationship = new Class("AssignmentRelationship");
-AssigmentRelationship.setReference("source", Class, 1);
-AssigmentRelationship.setReference("target", Class, 1);
-ModelE.push(AssigmentRelationship);
-var AccessRelationship = new Class ("AccessRelationship");
-AccessRelationship.setReference("source", Class, 1);
-AccessRelationship.setReference("target", Class, 1);
-ModelE.push(AccessRelationship);
-var UsedByRelationship = new Class ("UsedByRelationship");
-UsedByRelationship.setReference("source", Class, 1);
-UsedByRelationship.setReference("target", Class, 1);
-ModelE.push(UsedByRelationship);
+    var AggregationRelationship = new Class ("AggregationRelationship");
+    AggregationRelationship.setAttribute("id", String);
+    AggregationRelationship.setReference("source", Class, 1);
+    AggregationRelationship.setReference("target", Class, 1);
+    ModelE.push(AggregationRelationship);
+    var CompositionRelationsship = new Class ("CompositionRelationship");
+    CompositionRelationsship.setReference("source", Class, 1);
+    CompositionRelationsship.setReference("target", Class, 1);
+    ModelE.push(CompositionRelationsship);
+    var InfluenceRelationship = new Class ("InfluenceRelationship");
+    InfluenceRelationship.setReference("source", Class, 1);
+    InfluenceRelationship.setReference("target", Class, 1);
+    ModelE.push(InfluenceRelationship);
+    var AssociationRelationship = new Class ("AssociationRelationship");
+    AssociationRelationship.setReference("source", Class, 1);
+    AssociationRelationship.setReference("target", Class, 1);
+    ModelE.push(AssociationRelationship);
+    var SpecialisationRelationship  = new Class ("SpecialisationRelationship");
+    SpecialisationRelationship.setReference("source", Class, 1);
+    SpecialisationRelationship.setReference("target", Class, 1);
+    ModelE.push(SpecialisationRelationship);
+    var AssigmentRelationship = new Class("AssignmentRelationship");
+    AssigmentRelationship.setReference("source", Class, 1);
+    AssigmentRelationship.setReference("target", Class, 1);
+    ModelE.push(AssigmentRelationship);
+    var AccessRelationship = new Class ("AccessRelationship");
+    AccessRelationship.setReference("source", Class, 1);
+    AccessRelationship.setReference("target", Class, 1);
+    ModelE.push(AccessRelationship);
+    var UsedByRelationship = new Class ("UsedByRelationship");
+    UsedByRelationship.setReference("source", Class, 1);
+    UsedByRelationship.setReference("target", Class, 1);
+    ModelE.push(UsedByRelationship);
 
-M2Archi.setModellingElements(ModelE);
+    M2Archi.setModellingElements(ModelE);
 
-for(i in M2Archi.modellingElements) {
-	M2Archi.modellingElements[i].setAttribute("id",String);
+    for(i in M2Archi.modellingElements) {
+        M2Archi.modellingElements[i].setAttribute("id",String);
+    }
+
+    var ArchiSante= new Model("ArchimateSante");
+    ArchiSante.setReferenceModel = M2Archi;
+
+
+    //var domainFile = __dirname + '/'+ '/HealthModeling.txt'
+    var domainFile = filepath;
+
+    fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
+        //console.log(data)
+    //GENERATE XPATH Parser from M2
+        var doc = new dom().parseFromString(data)
+        var nodes = xpath.select("//element", doc); // WARNING element => not generic should be read from metamodel
+        for(i in M2Archi.modellingElements) {
+            var findName = "archimate:"; //WARNING archimate: => should be generated from metamodel
+            var currentClass = M2Archi.modellingElements[i];
+            var ClassName = M2Archi.modellingElements[i].__name;
+            findName += ClassName;
+            for (var i in nodes) {
+                var currentType = nodes[i].getAttribute("xsi:type"); //generic?
+                if(currentType == findName) {
+                    //console.log(currentType, findName);
+                    var s = currentClass.newInstance("x");
+                    for(it in currentClass.__attributes) {
+                        functionName = "set"+it; //- creating the name of the method to be called
+                        s[functionName](nodes[i].getAttribute(it));  // <=> setAttribute(Value)
+                    }
+                    for(it in currentClass.__references) {
+                        referenceFunctionName = "set"+it;
+                        var idReference = nodes[i].getAttribute(it);
+                        _.each(ArchiSante.modellingElements, 
+                            function(element,index,list) { 
+                                _.each(element,
+                                function(el2,ind2,list2) {
+                                    if(el2.id == idReference) {
+                                        s[referenceFunctionName](el2);
+                                    } // WARNING Check for unresolved references!
+                                }); //element not found? 
+                            });
+                    }
+                    ArchiSante.setModellingElement(s); 
+                }
+            }
+        }
+    // WARNING IN CASE OF NON RESOLVABLE REFERENCE use XPATH, KEEP THE LINKS OF UNDEFINED ELEMENT AND RESOLVE THEM AT THE END.	
+    //console.log(idReference);
+        /* get element with Xpath... but is it necessary? yes maybe for element that have not been created yet!
+            var referencedNodes = xpath.select("//element[@id='"+idReference+"']",doc); //===> select by ID ?
+            var IdRef = referencedNodes[0].getAttribute("id");
+        */	
+    // END WARNING	
+
+
+    // Save Model to the DB - WARNING currently it is not updating but duplicating nodes into DB!!!!!
+    //ArchiSante.save();
+
+    // REFACTORING of model to passe from: Source <- Relation -> Target to Source -> Target
+    var RefactoredM2Archi = new Model("ArchiRefactored");
+
+    var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
+    ArchiSanteRefactored.setReferenceModel(RefactoredM2Archi);
+    //console.log(ArchiSanteRefactored);
+    var TabResolution = [];
+    var LinkResolve={};
+
+    _.each(ArchiSante.modellingElements,
+    function(element, index,list){
+        _.each(element, 
+        function(el1,ind1,list1) {
+            //console.log(index,el1);
+            if(el1.source!=undefined && el1.target!=undefined) {
+                var sourceOb = el1.source[0];
+                var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
+                //modify the metamodel in order to add the relation
+                var M2source = sourceOb.conformsTo(); // 
+                M2source.setReference(index,targetOb.conformsTo(),-1);
+                var newObject = M2source.newInstance("T");
+
+                //Assign the value to the newobject (do not use newObject = sourceOb);
+                ModelCopy(sourceOb,newObject);
+
+                LinkResolve= {
+                            origin:sourceOb,
+                            target:newObject, 
+                            reference:index,
+                            referee:targetOb
+                            };
+
+                TabResolution.push(LinkResolve);
+                //if not already present add it to the model refactored
+                var Z = isPresent(newObject, ArchiSanteRefactored);
+                if(Z!=undefined) {
+                    //Do nothing 
+                    console.log("Present!");
+                } else {
+                    ArchiSanteRefactored.setModellingElement(newObject);
+                }
+            } 
+        });		//4 Add the reference to the new model			
+                //ArchiSanteRefactored.setModellingElement(newObject); //that is not erasing the other elements		
+    });	
+
+    MatchedSources = [];
+    MatchedSources = _.map(TabResolution, function(source) { 
+        return source.origin;
+    });
+
+    MatchedM2 = [];
+    MatchedM2= _.map(TabResolution, function(source) { 
+        return source.target.conformsTo();
+    });
+
+    _.each(TabResolution, 
+        function(el1,ind1) {
+        //search for existing OR transforms$
+        functionName = "set"+el1.reference;
+        if(_.contains(MatchedSources,el1.referee)) {
+            targeted= _.find(TabResolution, function(current) {
+                if(current.origin==el1.referee) { return current.target;}
+            });
+                //console.log(targeted.target);
+            el1.target[functionName](targeted.target);
+        //The object is not yet transformed in the new metamodel (Leaf of associations)
+        } else {
+            //console.log("LeafObject");
+            //target must of an instance of the new metamodel
+            M2target=_.find(MatchedM2, function(current) { 
+                return current.__name == el1.referee.conformsTo().__name;
+            });
+            newTarget= M2target.newInstance("newtarget");
+            ModelCopy(el1.referee,newTarget);
+            el1.target[functionName](newTarget);
+            ArchiSanteRefactored.setModellingElement(newTarget);
+        }
+
+    });
+
+    //WARNING address Objects non matched!!!
+
+    //Save Refactored model
+    ArchiSanteRefactored.save();
+
+    });
 }
-
-var ArchiSante= new Model("ArchimateSante");
-ArchiSante.setReferenceModel = M2Archi;
-
-
-var domainFile = __dirname + '/'+ '/HealthModeling.txt'
-
-fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
-	//console.log(data)
-//GENERATE XPATH Parser from M2
-	var doc = new dom().parseFromString(data)
-	var nodes = xpath.select("//element", doc); // WARNING element => not generic should be read from metamodel
-	for(i in M2Archi.modellingElements) {
-		var findName = "archimate:"; //WARNING archimate: => should be generated from metamodel
-		var currentClass = M2Archi.modellingElements[i];
-		var ClassName = M2Archi.modellingElements[i].__name;
-		findName += ClassName;
-		for (var i in nodes) {
-			var currentType = nodes[i].getAttribute("xsi:type"); //generic?
-			if(currentType == findName) {
-				//console.log(currentType, findName);
-				var s = currentClass.newInstance("x");
-				for(it in currentClass.__attributes) {
-					functionName = "set"+it; //- creating the name of the method to be called
-					s[functionName](nodes[i].getAttribute(it));  // <=> setAttribute(Value)
-				}
-				for(it in currentClass.__references) {
-					referenceFunctionName = "set"+it;
-					var idReference = nodes[i].getAttribute(it);
-					_.each(ArchiSante.modellingElements, 
-						function(element,index,list) { 
-							_.each(element,
-							function(el2,ind2,list2) {
-								if(el2.id == idReference) {
-									s[referenceFunctionName](el2);
-								} // WARNING Check for unresolved references!
-							}); //element not found? 
-						});
-				}
-				ArchiSante.setModellingElement(s); 
-			}
-		}
-	}
-// WARNING IN CASE OF NON RESOLVABLE REFERENCE use XPATH, KEEP THE LINKS OF UNDEFINED ELEMENT AND RESOLVE THEM AT THE END.	
-//console.log(idReference);
-	/* get element with Xpath... but is it necessary? yes maybe for element that have not been created yet!
-		var referencedNodes = xpath.select("//element[@id='"+idReference+"']",doc); //===> select by ID ?
-		var IdRef = referencedNodes[0].getAttribute("id");
-	*/	
-// END WARNING	
-	
-	
-// Save Model to the DB - WARNING currently it is not updating but duplicating nodes into DB!!!!!
-//ArchiSante.save();
-	
-// REFACTORING of model to passe from: Source <- Relation -> Target to Source -> Target
-var RefactoredM2Archi = new Model("ArchiRefactored");
-
-var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
-ArchiSanteRefactored.setReferenceModel(RefactoredM2Archi);
-//console.log(ArchiSanteRefactored);
-var TabResolution = [];
-var LinkResolve={};
-
-_.each(ArchiSante.modellingElements,
-function(element, index,list){
-	_.each(element, 
-	function(el1,ind1,list1) {
-		//console.log(index,el1);
-		if(el1.source!=undefined && el1.target!=undefined) {
-			var sourceOb = el1.source[0];
-			var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
-			//modify the metamodel in order to add the relation
-			var M2source = sourceOb.conformsTo(); // 
-			M2source.setReference(index,targetOb.conformsTo(),-1);
-			var newObject = M2source.newInstance("T");
-			
-			//Assign the value to the newobject (do not use newObject = sourceOb);
-			ModelCopy(sourceOb,newObject);
-			
-			LinkResolve= {
-						origin:sourceOb,
-						target:newObject, 
-						reference:index,
-						referee:targetOb
-						};
-						
-			TabResolution.push(LinkResolve);
-			//if not already present add it to the model refactored
-			var Z = isPresent(newObject, ArchiSanteRefactored);
-			if(Z!=undefined) {
-				//Do nothing 
-				console.log("Present!");
-			} else {
-				ArchiSanteRefactored.setModellingElement(newObject);
-			}
-		} 
-	});		//4 Add the reference to the new model			
-			//ArchiSanteRefactored.setModellingElement(newObject); //that is not erasing the other elements		
-});	
-
-MatchedSources = [];
-MatchedSources = _.map(TabResolution, function(source) { 
-	return source.origin;
-});
-
-MatchedM2 = [];
-MatchedM2= _.map(TabResolution, function(source) { 
-	return source.target.conformsTo();
-});
-
-_.each(TabResolution, 
-	function(el1,ind1) {
-	//search for existing OR transforms$
-	functionName = "set"+el1.reference;
-	if(_.contains(MatchedSources,el1.referee)) {
-		targeted= _.find(TabResolution, function(current) {
-			if(current.origin==el1.referee) { return current.target;}
-		});
-			//console.log(targeted.target);
-		el1.target[functionName](targeted.target);
-	//The object is not yet transformed in the new metamodel (Leaf of associations)
-	} else {
-		//console.log("LeafObject");
-		//target must of an instance of the new metamodel
-		M2target=_.find(MatchedM2, function(current) { 
-			return current.__name == el1.referee.conformsTo().__name;
-		});
-		newTarget= M2target.newInstance("newtarget");
-		ModelCopy(el1.referee,newTarget);
-		el1.target[functionName](newTarget);
-		ArchiSanteRefactored.setModellingElement(newTarget);
-	}
-	
-});
-
-//WARNING address Objects non matched!!!
-
-//Save Refactored model
-ArchiSanteRefactored.save();
-	
-});
 
 //Change it by a boolean expression...
 function isPresent(ModelElement, TModel) {
@@ -258,3 +261,5 @@ function Remove(TModel, ModelElement) {
 	console.log(indexRM);
 		TModel.modellingElements[indexM2].splice(indexRM,1);
 }
+
+exports.importArchi = importArchi;
