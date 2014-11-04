@@ -158,25 +158,26 @@ fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
 	
 // REFACTORING of model to passe from: Source <- Relation -> Target to Source -> Target
 var RefactoredM2Archi = new Model("ArchiRefactored");
-var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
-    ArchiSanteRefactored.setReferenceModel(RefactoredM2Archi);
-    //console.log(ArchiSanteRefactored);
-    var TabResolution = [];
-    var LinkResolve={};
+	var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
+ArchiSanteRefactored.setReferenceModel(RefactoredM2Archi);
+//console.log(ArchiSanteRefactored);
+var TabResolution = [];
+var LinkResolve={};
 
-    _.each(ArchiSante.modellingElements,
-    function(element, index,list){
-        _.each(element, 
-        function(el1,ind1,list1) {
-            //console.log(index,el1);
-            if(el1.source!=undefined && el1.target!=undefined) {
-                var sourceOb = el1.source[0];
-                var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
-                //modify the metamodel in order to add the relation
-                var M2source = sourceOb.conformsTo(); // 
-                M2source.setReference(index,targetOb.conformsTo(),-1);
-                var newObject = M2source.newInstance("T");
-
+_.each(ArchiSante.modellingElements,
+function(element, index,list){
+	_.each(element, 
+	function(el1,ind1,list1) {
+		//console.log(index,el1);
+		if(el1.source!=undefined && el1.target!=undefined) {
+			var sourceOb = el1.source[0];
+			var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
+			//modify the metamodel in order to add the relation
+			var M2source = sourceOb.conformsTo(); // 
+			M2source.setReference(index,targetOb.conformsTo(),-1);
+			var newObject = M2source.newInstance("T");
+			
+			//Assign the value to the newobject (do not use newObject = sourceOb);
                 //Assign the value to the newobject (do not use newObject = sourceOb);
                 ModelCopy(sourceOb,newObject);
 
@@ -200,11 +201,6 @@ var ArchiSanteRefactored = new Model("ArchiSanteRefactored");
         });		//4 Add the reference to the new model			
                 //ArchiSanteRefactored.setModellingElement(newObject); //that is not erasing the other elements		
     });	
-
- MatchedSources = [];
- MatchedSources = _.map(TabResolution, function(source) { 
-        return source.origin;
-    });
 
 MatchedM2 = [];
 MatchedM2= _.map(TabResolution, function(source) { 
