@@ -30,6 +30,23 @@ BusinessObject.setAttribute("name", String);
 BusinessObject.setAttribute("id", String);
 ModelE.push(BusinessObject);
 
+//Added since version 0.6
+var DataObject = new Class("DataObject");
+DataObject.setAttribute("name", String);
+DataObject.setAttribute("id", String);
+ModelE.push(DataObject);
+
+var ApplicationComponent = new Class("ApplicationComponent");
+ApplicationComponent.setAttribute("name", String);
+ApplicationComponent.setAttribute("id", String);
+ModelE.push(ApplicationComponent);
+
+var Contract = new Class("Contract");
+Contract.setAttribute("name",String);
+Contract.setAttribute("id", String);
+ModelE.push(Contract);
+//End version 0.6
+
 var Driver = new Class ("Driver");
 Driver.setAttribute("name", String);
 Driver.setAttribute("id", String);
@@ -86,14 +103,14 @@ for(i in M2Archi.modellingElements) {
 var ArchiSante= new Model("ArchimateSante");
 ArchiSante.setReferenceModel = M2Archi;
 
-
-var domainFile = __dirname + '/'+ '/HealthModeling.txt'
+//Path to the Archi Model File (XMI)
+//var domainFile = __dirname + '/'+ '/HealthModeling.txt'
+var domainFile = __dirname + '/'+ 'HealthModelingv6.archimate';
 
 fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
-	//console.log(data)
 //GENERATE XPATH Parser from M2
 	var doc = new dom().parseFromString(data)
-	var nodes = xpath.select("//element", doc); // WARNING element => not generic should be read from metamodel
+	var nodes = xpath.select("//element", doc); // WARNING elemen hard-wired (not a generic EMF term)
 	for(i in M2Archi.modellingElements) {
 		var findName = "archimate:"; //WARNING archimate: => should be generated from metamodel
 		var currentClass = M2Archi.modellingElements[i];
@@ -117,8 +134,8 @@ fs.readFile(domainFile, {encoding: "UTF-8"}, function(err, data) {
 							function(el2,ind2,list2) {
 								if(el2.id == idReference) {
 									s[referenceFunctionName](el2);
-								} // WARNING Check for unresolved references!
-							}); //element not found? 
+								} // WARNING also Check for unresolved references!
+							}); //What if element not found? 
 						});
 				}
 				ArchiSante.setModellingElement(s); 
@@ -192,14 +209,15 @@ MatchedM2 = [];
 MatchedM2= _.map(TabResolution, function(source) { 
 	return source.target.conformsTo();
 });
-
+    
+    
 _.each(TabResolution, 
 	function(el1,ind1) {
 	//search for existing OR transforms$
 	functionName = "set"+el1.reference;
 	if(_.contains(MatchedSources,el1.referee)) {
 		targeted= _.find(TabResolution, function(current) {
-			if(current.origin==el1.referee) { return current.target;}
+			if(current.origin==el1.referee) { return current;}
 		});
 			//console.log(targeted.target);
 		el1.target[functionName](targeted.target);
@@ -210,6 +228,9 @@ _.each(TabResolution,
 		M2target=_.find(MatchedM2, function(current) { 
 			return current.__name == el1.referee.conformsTo().__name;
 		});
+        
+        //Warning patch for V0.6
+        if(M2target==undefined) {M2target=ApplicationComponent;}
 		newTarget= M2target.newInstance("newtarget");
 		ModelCopy(el1.referee,newTarget);
 		el1.target[functionName](newTarget);
