@@ -202,6 +202,11 @@ function(element, index,list){
                 //ArchiSanteRefactored.setModellingElement(newObject); //that is not erasing the other elements		
     });	
 
+MatchedSources = [];
+MatchedSources = _.map(TabResolution, function(source) { 
+	return source.origin;
+});
+	
 MatchedM2 = [];
 MatchedM2= _.map(TabResolution, function(source) { 
 	return source.target.conformsTo();
@@ -253,6 +258,8 @@ _.each(TabResolution,
             M2target=_.find(MatchedM2, function(current) { 
                 return current.__name == el1.referee.conformsTo().__name;
             });
+			//Warning patch for V0.6
+			if(M2target==undefined) {M2target=ApplicationComponent;}
             newTarget= M2target.newInstance("newtarget");
             ModelCopy(el1.referee,newTarget);
             el1.target[functionName](newTarget);
