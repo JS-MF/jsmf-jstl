@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 Inheritance to be done
 Resolve reference in a model from a collection of (reference,type)
 */
@@ -13,7 +13,7 @@ function Model(name) {
 	this.referenceModel={}; //set the metamodel of this
     this.modellingElements={};   
 }
-
+//WARNING CHECK if classs is defined
 Model.prototype.setModellingElement = function(Class) {
 	if(Class.__name == undefined) {
 		var tab= [];
@@ -26,6 +26,12 @@ Model.prototype.setModellingElement = function(Class) {
 		this.modellingElements[Class.__name]=Class;
 	}
 };
+
+Model.prototype.contains = function(ModelElement) {	
+	var indexM = ModelElement.conformsTo().__name;
+	var result = _.contains(this.modellingElements[indexM],ModelElement);
+	return result;
+}
 
 Model.prototype.setModellingElements = function(ClassTab) {
 if(ClassTab instanceof Array) {
@@ -52,7 +58,7 @@ Model.prototype.setReferenceModel = function(metamodel) {
 }
 
 Model.prototype.save = function() {
-	// CHECK that ALL Referenced elements can be looked at in the DB : i.e., they have at least one attribute which is set...
+	// CHECK that ALL Referenced elements are valid in the DB : i.e., they have at least one attribute which is set...
 	modelDB.saveModel(this);
 }
 
@@ -61,6 +67,7 @@ function Class(name) {
     this.__name = name;
     this.__attributes = {};
     this.__references = {};
+	this.__superType = {};
 // name = string, type = string
 }
 
@@ -70,6 +77,16 @@ Class.prototype.setAttribute = function (name, type) {
 		this.__attributes[name] = type;
 	}
 };
+
+Class.prototype.getInheritanceChain = function() {
+	var result = [];
+	if(this.__superType==undefined) {
+		return result;
+	} else {
+		result.push(this.__superType);
+		this.__superType.getInheritanceChain();
+	}
+}
 
 //WARNING
 Class.prototype.conformsTo = function() {
@@ -81,7 +98,7 @@ Class.prototype.conformsTo = function() {
 
 //Relation nature: Composition? Inheritance? etc...
 Class.prototype.setReference = function (name, type, cardinality, opposite) {
-    // verifier si le nom n'est pas déjà pris, -> exception
+    // verifier si le nom n'est pas  pris, -> exception
     this.__references[name] = {
         "type": type,
          "card": cardinality
@@ -159,142 +176,7 @@ Class.prototype.newInstance = function (name) {
 	
     return result;
 };
-/*
-// M1 -- TESTS
-var M2FSM = new Model("FSM");
-var State = new Class("State"); //other instanciations ? create...
-var Transition = new Class("Transition");
-var FSMmodel = new Model("FSMmodel");
-FSMmodel.setReferenceModel(M2FSM);
 
-M2FSM.setModellingElements(State);
-M2FSM.setModellingElements(Transition);
-
-State.setAttribute("name", String);
-State.setAttribute("id", String);
-//State.setAttribute("self", State); // throw an error => see function for attributes
-State.setReference("transition", Transition, -1);
-//State.setReference("SuperClass", Class.prototype, 1); /For Test purpose should work
-Transition.setAttribute("name", String);
-//Transition.setReference("source", State, 1);
-Transition.setReference("dest", State, 1);
-
-var s = State.newInstance("actorSearch");
-var s2 = State.newInstance("actorDetails");
-var transit = Transition.newInstance("transit");
-var transitbis = Transition.newInstance("transitbis");
-transit.setname("Page Transition with id");
-transitbis.setname("Transition Bis");
-s.setname("actorSearch");
-s2.setname("actorDetails");
-transit.setdest(s2);
-s.settransition(transit);
-s.settransition(transitbis);
-s2.settransition(transitbis);
-transitbis.setdest(s);
-
-// Adding FSM model elements to the FSM Model conforms to FSM Metamodel
-FSMmodel.setModellingElements(s);
-FSMmodel.setModellingElements(s2);
-FSMmodel.setModellingElements(transit);
-FSMmodel.setModellingElements(transitbis);
-
-//console.log(FSMmodel.modellingElements);
-//modelDB.saveModel(M2FSM); //WARNING curreently not working
-modelDB.saveModel(FSMmodel);
-
-*/
-
-/* Display all model elements in a model
-for (i in FSMmodel.modellingElements) {
-	//console.log(FSMmodel.modellingElements[i]);
-	var modelElements = FSMmodel.modellingElements[i] //ModelElem = tab of modelling elements
-	//console.log(i, modelElem);
-	for( it in modelElements) {
-		element = modelElements[it];
-		for( j in element.conformsTo().__references) {
-			console.log(j, element[j]);
-		}
-		for (att in element.conformsTo().__attributes) {
-			console.log(att, element[att]);
-		}
-	}
-} */
-
-
-
-// Should be equivalent to modelDB.SaveModel
-//modelDB.persist(s);
-//modelDB.persist(s2);
-//modelDB.persist(transit);
-
-//modelDB.persistRelation(s);
-//modelDB.persistRelation(s2);
-//modelDB.persistRelation(transit);
-
- //resolve elements
-//modelDB.resolve(s);
-//modelDB.resolve(transit);
-//modelDB.resolve(s2);
-
-//modelDB.persist(transit); //WARNING Transient links
-//
-
-//modelDB.persistRelation(s);
-//modelDB.deleteElement(s);
-
-
-// TESTER
-//s.settransition(s2); // will return an error wrong assignation 
-//s.setSuperClass(Transition); // will return an error
-//s.settransition(transit);
-
-/*
-var pushObject = {};
-for(i in s.conformsTo().__attributes) {
-	console.log(i+" : "+s[i]);
-} 
-for( i in transit.conformsTo().__references) {
-	console.log(i);
-	console.log(s[i]); // tab => for in in s[i] ...
-	for(j in s[i]) {
-		console.log(s[i][j]);
-	}
-}*/
-
-//Create Meta-class
-/*var Entity = new Class("entity");
-Entity.setAttribute("attribute", {});
-
-var e = Entity.newInstance("e");
-e.setattribute({"name":String}); */
-
-/*
-// Test 2
-var TestClass = new Class("TestClass");
-
-var LowRangeClass = new Class("LowRangeClass");
-var HighRangeClass = new Class("HighRangeClass");
-
-var MegaClass = new Class("MegaClass");
-MegaClass.setReference("test", Class,1);
-
-TestClass.setAttribute("name", String);
-TestClass.setAttribute("test", Number);
-TestClass.setReference("from",[LowRangeClass, HighRangeClass],-1); //multityping
-
-var low = LowRangeClass.newInstance("low");
-var high = HighRangeClass.newInstance("high");
-
-var z = TestClass.newInstance("z");
-
-var mega = MegaClass.newInstance("mega");
-mega.settest(z);
-mega.settest(low);
-z.setfrom(low);
-z.setfrom(mega);
-console.log(z.from);
-*/
 
 module.exports = {
 
