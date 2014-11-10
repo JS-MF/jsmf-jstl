@@ -80,8 +80,6 @@ function resolveId(ModelElement)  {
 }
 
 
-
-
 function queryGeneration(ModelElement)  {
 	var queryPart="";
 	for(i in ModelElement.conformsTo().__attributes) {
@@ -116,34 +114,43 @@ function deleteAllNodes(ModelElement) {
 function saveModel(Model) {
 	//building element list
 
-	var pushRelation = {};
 	modelElements = [];
 	for(meta in Model.modellingElements) {
 		for(j in Model.modellingElements[meta]) {
 			modelElements.push(Model.modellingElements[meta][j]);
 		}
-	}
+	}  
+     //inspect(modelElements);
 	//create node before references, using async lib
 	async.each(modelElements, function(element, callback) {	
 		var pushObject = {};
-		for(i in element.conformsTo().__attributes) {
-			pushObject[i] = element[i];
-		}
+        
+        for(i in element.conformsTo().__attributes) {
+			 pushObject[i] = element[i];
+		  }
+        
+        var labelMetaClass = element.conformsTo().__name;
+        
+        //WARNING We are in presence of undefined metaelement OR a metaclass
+        if(labelMetaClass==undefined) {      
+            labelMetaClass = Model.__name+"_Class";
+        }
+        
 		db.insertNode(pushObject , 
-			element.conformsTo().__name,
+			labelMetaClass,
 			function(err, result) {
 				if(err) {
 					throw err;
 				} else {
 					idSource = result._id;
-					console.log('Object of Type: '+element.conformsTo().__name+' Added');
+					console.log('Object of Type: '+labelMetaClass+' Added');
 					callback();
 				}
-		});		
+		});	
 	}, function (res) {
-		console.log("All nodes pushed into Neo4J");
+		console.log("All nodes pushed into Neo4J... pushing associations");
 		async.each(modelElements, function(element, callback5) {
-			console.dir("Elements: "+element);
+			//console.dir("Elements: "+element);
 			createReferencesBVERSION(element,callback5);
 		}, function(res2) {
 			console.log("Model pushed fully into Neo4J");
@@ -152,30 +159,26 @@ function saveModel(Model) {
 }
 
 
-function createMetaNode(MetaModelElement) {
+function createMetaNode(MetaModelElement, Model,callback) {
 	var pushObject = {};
-	var pushRelation = {};
-	var relationLabel;
-	var idSource;
 	pushObject["__name"] = MetaModelElement.__name;
+    var metalabel = Model.__name+"_"+MetaModelElement.__name;
 	//Insert a node conforms to the model schema
 	for(i in MetaModelElement.__attributes) {
 		console.log(MetaModelElement.__attributes[i]);
 		pushObject[i] = MetaModelElement.__attributes[i];
 	}
 	db.insertNode(pushObject , 
-			'M2 Class',
+			metalabel,
 			function(err, result) {
 			if(err) {
 				throw err;
 			} else {
 				idSource = result._id;
-				console.log(idSource);
-				console.log('Object of Type: '+MetaModelElement.conformsTo()+' Added');
-				console.log(pushObject); //dump object
+				console.log('MetaObject of Type: '+metalabel+' Added');
+                callback();
 			}
 	});	
-	return idSource;
 }
 
 //REFERENCE 
@@ -209,7 +212,8 @@ function createReferencesBVERSION(ModelElement, callback5) {
 	async.parallel( 
 	[ function(callback1) {
 		// Get Source ID if references...
-//debug //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
+//debug 
+        //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
 		db.cypherQuery('MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n', null, function (err, result) {	
 			if(result.data.lenght!=0) {
 				//Always return the first value (oldest node)

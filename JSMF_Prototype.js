@@ -1,4 +1,4 @@
-﻿/**
+/**
 Inheritance to be done
 Resolve reference in a model from a collection of (reference,type)
 */
@@ -13,17 +13,19 @@ function Model(name) {
 	this.referenceModel={}; //set the metamodel of this
     this.modellingElements={};   
 }
+
 //WARNING CHECK if classs is defined
 Model.prototype.setModellingElement = function(Class) {
-	if(Class.__name == undefined) {
-		var tab= [];
-		//console.log(Class.conformsTo());
+    var tab= [];
+	if(Class.__name == undefined) {	
 		tab = this.modellingElements[Class.conformsTo().__name];
 		if(tab == undefined) {tab = [];}
 		tab.push(Class);
 		this.modellingElements[Class.conformsTo().__name] = tab;
 	} else {
-		this.modellingElements[Class.__name]=Class;
+        if(tab == undefined) {tab = [];}
+		tab.push(Class);
+		this.modellingElements[Class.__name]=tab;
 	}
 };
 
@@ -90,10 +92,9 @@ Class.prototype.getInheritanceChain = function() {
 
 //WARNING
 Class.prototype.conformsTo = function() {
-    var result = new Class();
-    result = this;
-    //console.log(Class.prototype);
-    return Class.prototype;
+    var result = new Class("M3Class");
+    //result = this; //incorrect hypothesis <=> not self defined
+    return  Class.prototype;
 };
 
 //Relation nature: Composition? Inheritance? etc...
