@@ -169,7 +169,7 @@ function(element, index,list){
 	_.each(element, 
 	function(el1,ind1,list1) {
 		//console.log(index,el1);
-		if(el1.source!=undefined && el1.target!=undefined) {
+		if(el1.source!=undefined && el1.target!=undefined) { //If el = relations
 			var sourceOb = el1.source[0];
 			var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
 			//modify the metamodel in order to add the relation
@@ -240,34 +240,6 @@ _.each(TabResolution,
 	}
 	
 });
-
-    _.each(TabResolution, 
-        function(el1,ind1) {
-        //search for existing OR transforms$
-        functionName = "set"+el1.reference;
-        if(_.contains(MatchedSources,el1.referee)) {
-            targeted= _.find(TabResolution, function(current) {
-                if(current.origin==el1.referee) { return current.target;}
-            });
-                //console.log(targeted.target);
-            el1.target[functionName](targeted.target);
-        //The object is not yet transformed in the new metamodel (Leaf of associations)
-        } else {
-            //console.log("LeafObject");
-            //target must of an instance of the new metamodel
-            M2target=_.find(MatchedM2, function(current) { 
-                return current.__name == el1.referee.conformsTo().__name;
-            });
-			//Warning patch for V0.6
-			if(M2target==undefined) {M2target=ApplicationComponent;}
-            newTarget= M2target.newInstance("newtarget");
-            ModelCopy(el1.referee,newTarget);
-            el1.target[functionName](newTarget);
-            ArchiSanteRefactored.setModellingElement(newTarget);
-        }
-
-    });
-
     //WARNING address Objects non matched!!!
 
     //Save Refactored model

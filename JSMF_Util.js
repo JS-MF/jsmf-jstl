@@ -87,8 +87,9 @@ function demote(MetaModel) {
 
 module.exports = {
 //Function Create Node From Model Element
-demote: function (MetaModelElement) {
-	demote(MetaModelElement);
+//Create a Model from a Metamodel    
+demote: function (MetaModel) {
+	demote(MetaModel);
 },
 
 

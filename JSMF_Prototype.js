@@ -1,6 +1,11 @@
 /**
-Inheritance to be done
-Resolve reference in a model from a collection of (reference,type)
+*   JavaScript Modelling Framework (JSMF)
+*   Copyright 2014 © Henri Tudor
+*   Authors : J.S. Sottet, A Vagner
+*
+*   - Inheritance to be done
+*   - Affect a model from a collection of (reference,type)
+*   - Checking :attributes and references overloading
 */
 
 var modelDB = require('./JSMFNeo4j.js');

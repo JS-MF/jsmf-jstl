@@ -27,30 +27,6 @@ saveModel : function(Model) {
 
 }; // end exports
 
-function createNode(ModelElement) {
-	var pushObject = {};
-	var pushRelation = {};
-	var relationLabel;
-	var idSource;
-	//Insert a node conforms to the model schema
-	for(i in ModelElement.conformsTo().__attributes) {
-		pushObject[i] = ModelElement[i];
-	}
-	db.insertNode(pushObject , 
-			ModelElement.conformsTo().__name,
-			function(err, result) {
-			if(err) {
-				throw err;
-			} else {
-				idSource = result._id;
-				//console.log(idSource);
-				console.log('Object of Type: '+ModelElement.conformsTo().__name+' Added');
-				//console.log(pushObject); //dump object
-			}
-	});	
-	return idSource;
-}
-
 // TODO do the Cypher query with object constructed from ModelElement
 function resolveId(ModelElement)  {
 	var queryPart="";
@@ -133,9 +109,9 @@ function saveModel(Model) {
         
         //WARNING We are in presence of undefined metaelement OR a metaclass
         if(labelMetaClass==undefined) {      
-            labelMetaClass = Model.__name+"_Class";
+            labelMetaClass = Model.__name+"_Class_Undefined";
         }
-        
+       
 		db.insertNode(pushObject , 
 			labelMetaClass,
 			function(err, result) {
@@ -148,7 +124,7 @@ function saveModel(Model) {
 				}
 		});	
 	}, function (res) {
-		console.log("All nodes pushed into Neo4J... pushing associations");
+		console.log("All nodes pushed into Neo4J... pushing associations");       
 		async.each(modelElements, function(element, callback5) {
 			//console.dir("Elements: "+element);
 			createReferencesBVERSION(element,callback5);
@@ -259,3 +235,29 @@ function createReferencesBVERSION(ModelElement, callback5) {
 		callback5();
 	}); //end parallel
 }
+
+/*
+function createNode(ModelElement) {
+	var pushObject = {};
+	var pushRelation = {};
+	var relationLabel;
+	var idSource;
+	//Insert a node conforms to the model schema
+	for(i in ModelElement.conformsTo().__attributes) {
+		pushObject[i] = ModelElement[i];
+	}
+	db.insertNode(pushObject , 
+			ModelElement.conformsTo().__name,
+			function(err, result) {
+			if(err) {
+				throw err;
+			} else {
+				idSource = result._id;
+				//console.log(idSource);
+				console.log('Object of Type: '+ModelElement.conformsTo().__name+' Added');
+				//console.log(pushObject); //dump object
+			}
+	});	
+	return idSource;
+}
+*/
