@@ -174,7 +174,7 @@ function(element, index,list){
 			var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
 			//modify the metamodel in order to add the relation
 			var M2source = sourceOb.conformsTo(); // 
-			M2source.setReference(index,targetOb.conformsTo(),-1);
+			M2source.setReference(index,Class,-1); //targetOb.conformsTo()
 			var newObject = M2source.newInstance("T");
 			
 			//Assign the value to the newobject (do not use newObject = sourceOb);
@@ -190,9 +190,10 @@ function(element, index,list){
 
                 TabResolution.push(LinkResolve);
                 //if not already present add it to the model refactored
-                var Z = isPresent(newObject, ArchiSanteRefactored);
-                if(Z!=undefined) {
-                    //Do nothing 
+                var existingElement = isPresent(newObject, ArchiSanteRefactored);
+             
+                if(existingElement!==undefined) {
+                    LinkResolve.target=existingElement;
                     console.log("Present!");
                 } else {
                     ArchiSanteRefactored.setModellingElement(newObject);
@@ -211,13 +212,17 @@ MatchedM2 = [];
 MatchedM2= _.map(TabResolution, function(source) { 
 	return source.target.conformsTo();
 });
-    
+
+UnMatchedM2 = [];
+UnMatchedM2= _.map(TabResolution, function(source) { 
+	return source.referee.conformsTo();
+});
     
 _.each(TabResolution, 
 	function(el1,ind1) {
-	//search for existing OR transforms$
+	//search for existing element transformed in step 1
 	functionName = "set"+el1.reference;
-	if(_.contains(MatchedSources,el1.referee)) {
+	if(_.contains(MatchedSources,el1.referee)) { 
 		targeted= _.find(TabResolution, function(current) {
 			if(current.origin==el1.referee) { return current;}
 		});
@@ -225,16 +230,20 @@ _.each(TabResolution,
 		el1.target[functionName](targeted.target);
 	//The object is not yet transformed in the new metamodel (Leaf of associations)
 	} else {
-		//console.log("LeafObject");
 		//target must of an instance of the new metamodel
 		M2target=_.find(MatchedM2, function(current) { 
 			return current.__name == el1.referee.conformsTo().__name;
-		});
+		}); //is it always: undefined? e.g., because of the nature of leafObject?
         
-        //Warning patch for V0.6
-        if(M2target==undefined) {M2target=ApplicationComponent;}
+        //Element has not been tranformed 
+        if(M2target==undefined) {
+        //M2target=ApplicationComponent; //Patch for the version n°6
+            M2target=_.find(UnMatchedM2, function(current) { 
+			 return current.__name == el1.referee.conformsTo().__name;
+		  });
+        }
 		newTarget= M2target.newInstance("newtarget");
-		ModelCopy(el1.referee,newTarget);
+		ModelCopy(el1.referee,newTarget);   
 		el1.target[functionName](newTarget);
 		ArchiSanteRefactored.setModellingElement(newTarget);
 	}
@@ -252,9 +261,9 @@ _.each(TabResolution,
 function isPresent(ModelElement, TModel) {
 	//Create the indexM for getting just the subset of elements that have the same (meta)type of ModelElement (i.e., indexation by metaclass name)
 		var indexM = ModelElement.conformsTo().__name;
-		var result= _.find(TModel.modellingElements[indexM],
-			function(current){ 
-				return current == ModelElement;
+		var result =_.find(TModel.modellingElements[indexM],
+			function(current){
+				return (JSON.stringify(ModelElement) == JSON.stringify(current));
 			});
 		return result;			
 }
