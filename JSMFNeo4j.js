@@ -98,7 +98,7 @@ function saveModel(Model) {
 	}  
      //inspect(modelElements);
 	//create node before references, using async lib
-	async.each(modelElements, function(element, callback) {	
+	async.eachSeries(modelElements, function(element, callback) {	
 		var pushObject = {};
         
         for(i in element.conformsTo().__attributes) {
@@ -185,7 +185,7 @@ function createReferencesBVERSION(ModelElement, callback5) {
 	//inspect(targetElements);
 	
 	//if referenceElement is not empty
-	async.parallel( 
+	async.parallelLimit( 
 	[ function(callback1) {
 		// Get Source ID if references...
 //debug 
@@ -198,7 +198,7 @@ function createReferencesBVERSION(ModelElement, callback5) {
 			callback1();
 		});
 	},	function(callback3) {
-				async.each(targetElements, function(element,callback2) {
+				async.eachSeries(targetElements, function(element,callback2) {
 				//console.log(element);
 					queryTarget = queryGeneration(element.el);
 					queryTargetType = "`"+element.el.conformsTo().__name+"`";
@@ -216,9 +216,11 @@ function createReferencesBVERSION(ModelElement, callback5) {
 						}
 						callback3();
 					});
-	}], function(err) {
+	}], 
+        10, //up to 10 queries in parallel (WARNING arbitrary limit).
+        function(err) {
 		//console.log(idTargets);	
-		async.each(idTargets, function(relation, callback6) {
+		async.eachSeries(idTargets, function(relation, callback6) {
 //DEbug //console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
 			 db.insertRelationship(idSource,relation.el, relation.label,{}, function(err, result){ // let see if transition should support some properties... 
 				if(err) {
