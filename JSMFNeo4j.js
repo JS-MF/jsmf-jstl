@@ -125,7 +125,7 @@ function saveModel(Model) {
 		});	
 	}, function (res) {
 		console.log("All nodes pushed into Neo4J... pushing associations");       
-		async.each(modelElements, function(element, callback5) {
+		async.eachSeries(modelElements, function(element, callback5) {
 			//console.dir("Elements: "+element);
 			createReferencesBVERSION(element,callback5);
 		}, function(res2) {

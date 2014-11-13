@@ -4,6 +4,8 @@ var fs = require('fs');
 var JSMF = require('./JSMF_Prototype');
 var Model = JSMF.Model;
 var Class = JSMF.Class;
+var deequal = require('deep-equal'); 
+var util = require('./JSMF_Util');
 var _ = require('underscore');
 var inspect = require('eyes').inspector({
     maxLength: 9000
@@ -227,6 +229,7 @@ function importArchi(filepath) {
             function (el1, ind1) {
                 //Target element of the transformation (referee) is already a source of another relation (origin) in matched elements
                 functionName = "set" + el1.reference;
+                var targeted={};
                 if (_.contains(MatchedSources, el1.referee)) {
                     targeted = _.find(TabResolution, function (current) {
                         if (current.origin == el1.referee) {
@@ -234,29 +237,38 @@ function importArchi(filepath) {
                         }
                     });
                     el1.target[functionName](targeted.target);
-                    //The object is not yet transformed in the new metamodel (Leaf of associations or )
-                } else {
-                    //target has already been transformed = instance of the new metamodel
+                   
+                } else { // The element has not already been transformed (i.e., it is not source of an association
+                    //Target metamodel element 
                     M2target = _.find(MatchedM2, function (current) {
                         return current.__name == el1.referee.conformsTo().__name;
                     }); //is it always: undefined? e.g., because of the nature of leafObject?
-                    //Element has not been tranformed 
+                    
+                    //No elements have been tranformed => keep the old metamodel
                     if (M2target == undefined) {
                         M2target = _.find(UnMatchedM2, function (current) {
                             return current.__name == el1.referee.conformsTo().__name;
                         });
                     }
+                    
                     newTarget = M2target.newInstance("newtarget");
                     ModelCopy(el1.referee, newTarget);
-                    el1.target[functionName](newTarget);
-                    ArchiSanteRefactored.setModellingElement(newTarget);
+                    
+                    var existingElement = isPresent(newTarget, ArchiSanteRefactored);
+                     if (existingElement !== undefined) {
+                            //    
+                    } else {
+                
+                        el1.target[functionName](newTarget);
+                        ArchiSanteRefactored.setModellingElement(newTarget);
+                    }
                 }
 
             });
         //WARNING address Objects non matched!!! i.e., which have not references
 
         //Save Refactored model
-          ArchiSanteRefactored.save();
+        //ArchiSanteRefactored.save();
 
     });
 }
@@ -267,10 +279,16 @@ function isPresent(ModelElement, TModel) {
     var indexM = ModelElement.conformsTo().__name;
     var result = _.find(TModel.modellingElements[indexM],
         function (current) {
-            return (JSON.stringify(ModelElement) == JSON.stringify(current));
+            //return (JSON.stringify(ModelElement) == JSON.stringify(current));
+            inspect(ModelElement);
+            inspect(current);
+            //console.log(deequal(ModelElement,current));
+            console.log(util.equals(ModelElement,current));
+            return util.equals(ModelElement,current);
         });
     return result;
 }
+
 //Should be REPORTED AS HELPER or JSMF_UTIL IN JSMF PROTOTYPE
 //Copy the element which are the same from sourceME to targetME without changing the metaclass of Source and Target elements
 function ModelCopy(SourceME, TargetME) {
