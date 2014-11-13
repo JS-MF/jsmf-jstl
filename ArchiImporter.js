@@ -4,7 +4,6 @@ var fs = require('fs');
 var JSMF = require('./JSMF_Prototype');
 var Model = JSMF.Model;
 var Class = JSMF.Class;
-var deequal = require('deep-equal'); 
 var util = require('./JSMF_Util');
 var _ = require('underscore');
 var inspect = require('eyes').inspector({
