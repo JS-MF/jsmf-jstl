@@ -227,7 +227,7 @@ function createReferencesBVERSION(ModelElement, callback5) {
 					throw err;
 				} else {
 					relationid = result._id;
-					//console.log("Reference created "+relationid);
+					console.log("Reference created "+relation.label);
 					callback6();
 				}
 			});// end dbInsert 

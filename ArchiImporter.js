@@ -171,7 +171,26 @@ function importArchi(filepath) {
         //console.log(ArchiSanteRefactored);
         var TabResolution = [];
         var LinkResolve = {};
-
+        
+        //1st STEP : Update/Refactor the metamodel according to the relationships to be created
+        _.each(ArchiSante.modellingElements,
+            function (element, index, list) {
+                _.each(element,
+                    function (el1, ind1, list1) {
+                        //console.log(index,el1);
+                        if (el1.source != undefined && el1.target != undefined) {
+                             var sourceOb = el1.source[0];
+                            var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
+                            //modify the metamodel in order to add the relation
+                            var M2source = sourceOb.conformsTo(); // WARNING this is not making a copy!
+                            M2source.setReference(index, Class, -1); 
+                            //RefactoredM2Archi.setModellingElement(M2source); //not usefull since M2source.setReference modify the original metamodel sourceOb.conformsTo();
+                            
+                        }
+               });
+        });
+        
+        //2nde STEP: update the modelling element which are source of associations
         _.each(ArchiSante.modellingElements,
             function (element, index, list) {
                 _.each(element,
@@ -182,7 +201,7 @@ function importArchi(filepath) {
                             var targetOb = el1.target[0]; //association of card = 1 so take the first element: [0];
                             //modify the metamodel in order to add the relation
                             var M2source = sourceOb.conformsTo(); // 
-                            M2source.setReference(index, Class, -1); //targetOb.conformsTo()
+                         //   M2source.setReference(index, Class, -1); //targetOb.conformsTo()
                             var newObject = M2source.newInstance("T");
 
                             //Assign the value to the newobject (do not use newObject = sourceOb);
@@ -225,6 +244,7 @@ function importArchi(filepath) {
             return source.referee.conformsTo();
         });
 
+        // 3 STEP use the resolve Tab to build the association/relationship between the right source and target
         _.each(TabResolution,
             function (el1, ind1) {
                 //Target element of the transformation (referee) is already a source of another relation (origin) in matched elements
@@ -256,9 +276,9 @@ function importArchi(filepath) {
                     
                     var existingElement = isPresent(newTarget, ArchiSanteRefactored);
                      if (existingElement !== undefined) {
-                            //    
-                    } else {
-                
+                            //element already exists    
+                            el1.target[functionName](existingElement);
+                    } else {              
                         el1.target[functionName](newTarget);
                         ArchiSanteRefactored.setModellingElement(newTarget);
                     }
@@ -268,7 +288,7 @@ function importArchi(filepath) {
         //WARNING address Objects non matched!!! i.e., which have not references
 
         //Save Refactored model
-        //ArchiSanteRefactored.save();
+       ArchiSanteRefactored.save();
 
     });
 }
@@ -279,14 +299,36 @@ function isPresent(ModelElement, TModel) {
     var indexM = ModelElement.conformsTo().__name;
     var result = _.find(TModel.modellingElements[indexM],
         function (current) {
-            //return (JSON.stringify(ModelElement) == JSON.stringify(current));
-            inspect(ModelElement);
-            inspect(current);
+           // inspect(ModelElement);
+           // inspect(current);
+            console.log(ModelElement.id==current.id);
+            //return objCompare(ModelElement,current);
+            return ModelElement.id==current.id;
+           
             //console.log(deequal(ModelElement,current));
-            console.log(util.equals(ModelElement,current));
-            return util.equals(ModelElement,current);
+           // console.log(util.equals(ModelElement,current));
+           // return util.equals(ModelElement,current);
+            
         });
     return result;
+}
+
+//Function Compare
+function objCompare(a, b) {
+	function replacer(key, value) {
+		if (typeof value === 'object' && value !== null && key !== '') {
+			value = JSON.stringify(value, function(k,v) {
+				if (typeof v === 'object' && v !== null && k !== '') {
+					v = undefined
+				}
+				return v;
+			});
+		}
+		return value;
+	}
+	var sa = JSON.stringify(a, replacer);
+	var sb = JSON.stringify(b, replacer);
+	return (sa == sb);
 }
 
 //Should be REPORTED AS HELPER or JSMF_UTIL IN JSMF PROTOTYPE
