@@ -3,12 +3,20 @@
  *   Copyright 2014 © Henri Tudor
  *   Authors : J.S. Sottet, A Vagner
  *
- *   - Inheritance to be done
- *   - Affect a model from a collection of (reference,type)
- *   - Checking :attributes and references overloading
+ *    Todo
+ *      - Inheritance: ongoing
+ *      - Checking :attributes and references overloading
+ *      - implement different level of checking (type)
+ *      - Checking for type in references according to supertypes inheritance chain
+ *      - Checking for types that are not JS primitive types (attributes)
+ *      -  Persistance and Loading using JSON
+ *
+ *   Done
+ *      - Demotion (see JSMF_Utils)
+ *
  */
 
-var modelDB = require('./JSMFNeo4j.js');
+var modelDB = require('./JSMFNeo4j.js'); // TODO Make a warapper for DB (
 var _ = require('underscore');
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
@@ -38,6 +46,13 @@ Model.prototype.setModellingElement = function (Class) {
     }
 };
 
+//Send to JSMF Util?
+Model.prototype.getPersistedID = function (ModelElement) {
+    var result = modelDB.resolve(ModelElement);
+    return result;
+}
+
+//Send to JSMF Util?
 Model.prototype.contains = function (ModelElement) {
     var indexM = ModelElement.conformsTo().__name;
     var result = _.contains(this.modellingElements[indexM], ModelElement);
@@ -89,6 +104,10 @@ Class.prototype.setAttribute = function (name, type) {
         this.__attributes[name] = type;
     }
 };
+
+Class.prototype.setSuperType = function (Class) {
+    this.__superType[Class.__name] = Class;
+}
 
 Class.prototype.getInheritanceChain = function () {
     var result = [];
@@ -144,14 +163,14 @@ function makeReference(ob, index, type, card) {
                 //console.log("Generic Type");
                 ob[index].push(param);
             } else {
-                if (type instanceof Array) {
+                if (type instanceof Array) { //warning checking all the element type in array
                     if (_.contains(type, param.conformsTo())) {
                         ob[index].push(param);
                     } else {
                         console.log("assigning wrong type: " + param.conformsTo().__name + " Expecting types in " + type);
                     }
                 } else {
-                    if (type == param.conformsTo()) {
+                    if (type == param.conformsTo() || _.contains(type, param.getInheritanceChain)) { //To be tested
                         ob[index].push(param);
                     } else {
                         //ob[index].push(param); //WARNING DO the push if type 
@@ -166,13 +185,31 @@ function makeReference(ob, index, type, card) {
 Class.prototype.newInstance = function (name) {
     var result = {}; // new Class(name); //=> see promotion //{}
     var self = this;
-    //create setter for attributes
+    //create setter for attributes from superclass (TODO do it for all superclass in all  inheritance level (inheritance chaining)
+    var allsuperType = self.getInheritanceChain();
+    for (var sType in this.__superType) {
+        var refSuperType = this.__superType[sType];
+        for (var sup in refSuperType.__attributes) {
+            result[sup] = new refSuperType.__attributes[sup]();
+            var attype = refSuperType.__attributes[sup];
+            result["set" + sup] = makeAssignation(result, sup, attype);
+        }
+        //do the same for references
+        for (var sup in refSuperType.__references) {
+            result[sup] = [];
+            var type = refSuperType.__references[sup].type;
+            var card = refSuperType.__references[sup].card;
+            result["set" + sup] = makeReference(result, sup, type, card);
+        }
+    }
+    //create setter for attributes (super attributes will be overwritten if they have the same name)
     for (var i in this.__attributes) {
         result[i] = new this.__attributes[i]();
         var attype = this.__attributes[i];
         result["set" + i] = makeAssignation(result, i, attype);
     }
-    //create setter for references
+
+    //create setter for references (super references will be overwritten if they have the same name)
     for (var j in this.__references) {
         result[j] = [];
         var type = this.__references[j].type;

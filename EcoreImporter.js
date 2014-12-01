@@ -3,17 +3,18 @@ var xpath = require('xpath')
 var fs = require('fs');
 var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF.Class;
 var _ = require('underscore');
-var inspect = require('eyes').inspector({maxLength: 9000});
+var inspect = require('eyes').inspector({maxLength: 900});
 var xml2js = require('xml2js');
 
 var ModelImport = [];
 
-var metaModelFile = __dirname + '/'+ '/TDA.ecore'
+var metaModelFile = __dirname + '/'+ '/TDA.ecore';
+var modelFile = __dirname + '/' + 'TDA2.xmi';
 
 var parser = new xml2js.Parser();
 
 
-var InjectModel = new Model("Injected");
+var InjectMetaModel = new Model("Injected");
 
 fs.readFile(metaModelFile, {encoding: "UTF-8"}, 
 function(err, data) {
@@ -26,7 +27,7 @@ function(err, data) {
 				_.each(el1.eStructuralFeatures, function(att2,ind2,list2) {
 					var sFeature = att2.$;
 					//console.log(sFeature['xsi:type']);
-					switch(sFeature['xsi:type']) {
+					switch(sFeature['xsi:type']) { //ADD the other Types ENum, etc...
 					case 'ecore:EAttribute':
 						var featureType = _.last(sFeature.eType.split('//'));
 						var JSMFType="";
@@ -51,34 +52,75 @@ function(err, data) {
 					case 'ecore:EReference' :
 						var referenceType = _.last(sFeature.eType.split('//'));
 						var card = sFeature.upperBound; //=> TO number
+                        var composite = sFeature.containment;
 						if(card==undefined) {card=1;}
-						//resolve reference type after the creation of all classes?
-						MElem.setReference(sFeature.name,referenceType,card); // TO BE set : eOpposite		
+						//resolve reference type after the creation of all classes? 
+                        composite = (composite!== undefined)?true:false;
+						MElem.setReference(sFeature.name,referenceType,card,composite); // TO BE set : eOpposite	
 					break;	
 					}
 				});
-				InjectModel.setModellingElement(MElem);
+               
+				InjectMetaModel.setModellingElement(MElem);
 			});
 		});
 	});
-	resolveReference(InjectModel);
+	resolveReference(InjectMetaModel);
 	//resolveInheritance(InjectModel);
-	//inspect(InjectModel);
-	var TaskClass = InjectModel.modellingElements['Task'];
-	console.log(TaskClass);
-	var instanceTask = TaskClass.newInstance("T");
-	instanceTask.setname("Steering");
-	instanceTask.setfrequency(3);
-	//inspect(instanceTask);
-	//add an object containing all the settings of an instance.
-	var OperatorClass = InjectModel.modellingElements['Operator'];
-	console.log(OperatorClass);
-	var instanceOperator = OperatorClass.newInstance("ZT");
-	instanceOperator.setsuperTask(instanceTask);
-	//inspect(instanceOperator);
+	//inspect(InjectMetaModel);
+	
+	var injectedmodel = new Model("TDA");
+	injectedmodel.setReferenceModel(InjectMetaModel);
+	var rootMetaModelElement = InjectMetaModel.modellingElements['TDAModel'];
+	var uri = 'lu.tudor.tda:';
+    var rootModeELement = rootMetaModelElement.newInstance("");
+	fs.readFile(modelFile, {encoding: "UTF-8"}, 
+	function(err, data) {
+		var doc = new dom().parseFromString(data);
+		buildModelFromRef(doc,injectedmodel,rootModeELement);
+		//inspect(nodes);
+	});
 	
 });
+
 //
+function buildModelFromRef(doc, modelT,currentElement) { 
+    var currentM2Element = currentElement.conformsTo();
+    _.each(currentM2Element.__references, function(elem,index) {
+        if(elem.composite==true) {
+            //console.log(index, elem);
+            var getName = "//"+index;
+            nodes = xpath.select(getName, doc);
+            //for each nodes given by xpath query
+            for( var i in nodes) {
+                
+                //Get the class referenced by the current reference index (i.e., type of reference)
+                var referencedM2Class = currentM2Element.__references[index].type;
+                
+                //Create a new modelling element for the current reference index
+                var addedElement = referencedM2Class.newInstance();
+                
+                //set the model  (attributes)
+                 _.each(elem.type.__attributes, function(el1,ind1) {
+                     var setterfunction = "set"+ind1;
+                    addedElement[setterfunction](nodes[i].getAttribute(ind1));
+                });
+                console.log(addedElement.name);
+                var associationFunction = "set"+index;
+                
+                //create the relation between currentElement and referenced element
+                currentElement[associationFunction](addedElement);
+                
+                //Save the added element to the model
+                modelT.setModellingElement(addedElement);
+                
+                // Recursive Call (for each referenced element which are containement references)
+               // buildModelFromRef(doc,modelT,addedElement);
+            }
+        } 
+    });
+    //console.log(currentElement);
+}
 
 //model
 function resolveReference(model, refModels) {
@@ -98,8 +140,10 @@ function resolveReference(model, refModels) {
 				} else {
 					// current element is only a reference to the real element in the model
 					//console.log(e,currentRef);
-					model.modellingElements[i].setReference(e,realType,currentRef.card); //currentRef.opposite
+					model.modellingElements[i].setReference(e,realType,currentRef.card,currentRef.composite); //currentRef.opposite
 				}
 		}
 	}
 }
+
+//function getAttribute()

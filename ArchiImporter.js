@@ -4,7 +4,6 @@ var fs = require('fs');
 var JSMF = require('./JSMF_Prototype');
 var Model = JSMF.Model;
 var Class = JSMF.Class;
-var deequal = require('deep-equal'); 
 var util = require('./JSMF_Util');
 var _ = require('underscore');
 var inspect = require('eyes').inspector({
@@ -286,9 +285,9 @@ function importArchi(filepath) {
 
             });
         //WARNING address Objects non matched!!! i.e., which have not references
-
         //Save Refactored model
        ArchiSanteRefactored.save();
+        
 
     });
 }
@@ -299,9 +298,7 @@ function isPresent(ModelElement, TModel) {
     var indexM = ModelElement.conformsTo().__name;
     var result = _.find(TModel.modellingElements[indexM],
         function (current) {
-           // inspect(ModelElement);
-           // inspect(current);
-            console.log(ModelElement.id==current.id);
+            //console.log(ModelElement.id==current.id);
             //return objCompare(ModelElement,current);
             return ModelElement.id==current.id;
            

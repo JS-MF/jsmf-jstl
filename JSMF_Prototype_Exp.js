@@ -7,8 +7,8 @@ var inspect = require('eyes').inspector({maxLength: 9000});
 //Natural => Formal
 function Model(name) {
     this.__name = name;
-	this.referenceModel={}; //set the metamodel of this
-    this.modellingElements={};   
+	this.referenceModel = {}; //set the metamodel of this
+    this.modellingElements = {};   
 }
 
 Model.prototype.setModellingElement = function(Class) {
@@ -53,7 +53,7 @@ Model.prototype.save = function() {
 	modelDB.saveModel(this);
 }
 
-//M2
+//M ->
 function ModelElement(name) {
 	this.__name = name;
 }

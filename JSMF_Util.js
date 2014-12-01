@@ -5,6 +5,20 @@ var _ = require('underscore');
 
 
 //Copy the element which are the same from sourceME to targetME without changing the metaclass of Source and Target elements
+function AttributesModelCopy(SourceME, TargetME) {
+    _.each(SourceME.conformsTo().__attributes, function (element, index, list) {
+        if (TargetME.hasOwnProperty(index)) {
+            var setValue = "set" + index;
+            TargetME[setValue](SourceME[index]); // or TargetME[index]=SourceME[index] => prefere the current solution because its check name unicity and attribute types!
+        }
+    });
+    //DO the same for the references
+    //_.each(SourceME.conformsTo()._references, function(element,index,list) { 
+    // DO the affectation of references elements
+    //});
+}
+
+
 function ModelCopy(SourceME, TargetME) {
     _.each(SourceME.conformsTo().__attributes, function (element, index, list) {
         if (TargetME.hasOwnProperty(index)) {
@@ -18,6 +32,7 @@ function ModelCopy(SourceME, TargetME) {
     //});
 }
 
+//extract model of a metamodel
 function demote(MetaModel) {
 
     var result = new Model(MetaModel.__name + "_Demoted");
@@ -44,7 +59,7 @@ function demote(MetaModel) {
     for (e in MetaModel.modellingElements) {
         for (j in MetaModel.modellingElements[e]) {
             var currentClass = MetaModel.modellingElements[e][j];
-            var test = M3Class.newInstance("test");
+            var test = M3Class.newInstance("");
             test.set_name(currentClass.__name);
 
             for (i in currentClass.__attributes) {
@@ -89,11 +104,33 @@ function demote(MetaModel) {
             }
         }
     }
-
     // end of process
     console.log(result);
     //result.save();
     return result;
+}
+
+//Create a metamodel from model elements
+function Promote(model) {
+    var result = new Model(model.__name+"_promoted");
+    var M2 =  model.referenceModel;
+    for(i in model.modellingElements) {
+        var currentelement = model.modellingElements[i];
+        var M2Class = new CLass(currentelement.__name);
+    }
+    
+}
+
+//Get the metamodel from model
+function ExtractMetamodel() {
+    
+    
+}
+
+function metamodelEquals(M2elementR,M2elementL) {
+    var result = true;   
+    
+    return result;    
 }
 
 //Shallow equals between two JSMF models
