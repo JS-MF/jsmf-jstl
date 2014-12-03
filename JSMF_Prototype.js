@@ -111,7 +111,7 @@ Class.prototype.setSuperType = function (Class) {
 
 Class.prototype.getInheritanceChain = function () {
     var result = [];
-    if (this.__superType == undefined) {
+    if (Object.getOwnPropertyNames(this.__superType).length == 0 || this.__superType == undefined) {
         return result;
     } else {
         result.push(this.__superType);
