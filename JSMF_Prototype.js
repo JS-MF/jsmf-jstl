@@ -18,7 +18,7 @@
  *
  */
 
-var modelDB = require('./JSMFNeo4j.js'); // TODO Make a warapper for DB (
+var modelDB = require('./JSMFNeo4j.js'); // TODO Make a wrapper for DB (
 var _ = require('underscore');
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
@@ -131,11 +131,11 @@ Class.prototype.getInheritanceChain = function () {
     }
 }
 
-//WARNING
+//Instance of MetaClass is conforms to Class.
 Class.prototype.conformsTo = function () {
-    var result = new Class("M3Class");
+    //var result = new Class("M3Class");
     //result = this; //incorrect hypothesis <=> not self defined
-    return Class.prototype;
+    return Class; //.prototype;
 };
 
 //Relation nature: Composition? Inheritance? etc...
@@ -237,6 +237,16 @@ Class.prototype.newInstance = function (name) {
     return result;
 };
 
+/*
+var State = Class.newInstance('State');
+			State.setAttribute('name', String);
+			State.setAttribute('id', Number);
+			State.setAttribute('active', Boolean);
+var Transition = Class.newInstance('Transition');
+			State.setReference('transition', Transition,1);
+console.log(State.__references['transition'].type);
+console.log(Transition);
+*/
 
 module.exports = {
 
