@@ -133,7 +133,7 @@ function metamodelEquals(M2elementR,M2elementL) {
     return result;    
 }
 
-//Shallow equals between two JSMF models
+//Shallow equals between two JSMF modeling elements
 function equals(elementR, elementL) {
     var result = true;
     if (elementR.conformsTo().__name !== elementL.conformsTo().__name) { //Warning check that these objects are correct too

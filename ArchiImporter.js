@@ -15,7 +15,7 @@ function importArchi(filepath) {
 
     //Build ArchiMateMetamodel => should be built from M2.ecore file (and restricted to elements of interests - reduced viewpoint).
     var M2Archi = new Model("Archi");
-    var BusinessActor = new Class("BusinessActor");
+    var BusinessActor = Class.newInstance("BusinessActor");
     BusinessActor.setAttribute("name", String);
     BusinessActor.setAttribute("id", String);
     ModelE.push(BusinessActor);

@@ -1,6 +1,7 @@
 /**
  *   JavaScript Modelling Framework (JSMF)
  *   Copyright 2014 © Henri Tudor
+ * 	 Copyright 2015 © LIST
  *   Authors : J.S. Sottet, A Vagner
  *
  *    Todo
@@ -9,7 +10,8 @@
  *      - implement different level of checking (type)
  *      - Checking for type in references according to supertypes inheritance chain
  *      - Checking for types that are not JS primitive types (attributes)
- *      -  Persistance and Loading using JSON
+ *      - Persistance and Loading using JSON
+ *		- Add keyword "Any" for loose typing
  *
  *   Done
  *      - Demotion (see JSMF_Utils)
@@ -96,8 +98,18 @@ function Class(name) {
     this.__attributes = {};
     this.__references = {};
     this.__superType = {};
-    // name = string, type = string
 }
+
+Class.newInstance = function (classname){ 
+	var Obj = new Class(classname); 
+	return Obj; 
+};
+
+//Class conformsTo itself (metacircularity)
+Class.conformsTo = function() {
+	return Class; 
+
+};
 
 Class.prototype.setAttribute = function (name, type) {
     if (_.contains(this.__attributes, name)) {} else {
@@ -183,9 +195,9 @@ function makeReference(ob, index, type, card) {
 }
 
 Class.prototype.newInstance = function (name) {
-    var result = {}; // new Class(name); //=> see promotion //{}
+    var result = {}; 
     var self = this;
-    //create setter for attributes from superclass (TODO do it for all superclass in all  inheritance level (inheritance chaining)
+    //create setter for attributes from superclass
     var allsuperType = self.getInheritanceChain();
     for (var sType in this.__superType) {
         var refSuperType = this.__superType[sType];
