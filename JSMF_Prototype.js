@@ -121,13 +121,14 @@ Class.prototype.setSuperType = function (Class) {
     this.__superType[Class.__name] = Class;
 }
 
-Class.prototype.getInheritanceChain = function () {
-    var result = [];
+Class.prototype.getInheritanceChain = function(result) {
     if (Object.getOwnPropertyNames(this.__superType).length == 0 || this.__superType == undefined) {
         return result;
     } else {
-        result.push(this.__superType);
-        this.__superType.getInheritanceChain();
+        for(i in this.__superType) {
+			result.push(this.__superType[i]);	
+		}		
+        return this.__superType[i].getInheritanceChain(result);
     }
 }
 
@@ -197,15 +198,17 @@ function makeReference(ob, index, type, card) {
 Class.prototype.newInstance = function (name) {
     var result = {}; 
     var self = this;
+	
     //create setter for attributes from superclass
-    var allsuperType = self.getInheritanceChain();
-    for (var sType in this.__superType) {
-        var refSuperType = this.__superType[sType];
+    var allsuperType = this.getInheritanceChain([]);
+
+	for(var i in allsuperType) {
+		refSuperType = allsuperType[i];
         for (var sup in refSuperType.__attributes) {
-            result[sup] = new refSuperType.__attributes[sup]();
+         	result[sup] = new refSuperType.__attributes[sup]();
             var attype = refSuperType.__attributes[sup];
             result["set" + sup] = makeAssignation(result, sup, attype);
-        }
+       	}
         //do the same for references
         for (var sup in refSuperType.__references) {
             result[sup] = [];
@@ -213,7 +216,8 @@ Class.prototype.newInstance = function (name) {
             var card = refSuperType.__references[sup].card;
             result["set" + sup] = makeReference(result, sup, type, card);
         }
-    }
+	}
+
     //create setter for attributes (super attributes will be overwritten if they have the same name)
     for (var i in this.__attributes) {
         result[i] = new this.__attributes[i]();
@@ -237,16 +241,6 @@ Class.prototype.newInstance = function (name) {
     return result;
 };
 
-/*
-var State = Class.newInstance('State');
-			State.setAttribute('name', String);
-			State.setAttribute('id', Number);
-			State.setAttribute('active', Boolean);
-var Transition = Class.newInstance('Transition');
-			State.setReference('transition', Transition,1);
-console.log(State.__references['transition'].type);
-console.log(Transition);
-*/
 
 module.exports = {
 
