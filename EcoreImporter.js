@@ -13,7 +13,6 @@ var modelFile = __dirname + '/' + 'TDA2.xmi';
 
 var parser = new xml2js.Parser();
 
-
 var InjectMetaModel = new Model("Injected");
 
 fs.readFile(metaModelFile, {encoding: "UTF-8"}, 
@@ -30,7 +29,7 @@ function(err, data) {
 					switch(sFeature['xsi:type']) { //ADD the other Types ENum, etc...
 					case 'ecore:EAttribute':
 						var featureType = _.last(sFeature.eType.split('//'));
-						var JSMFType="";
+						var JSMFType='';
 						switch(featureType) {
 							case "EString": 
 								JSMFType = String;
@@ -43,8 +42,8 @@ function(err, data) {
 							break;
 							//WARNING : no else cases
 						}
-						if(JSMFType =="") {
-							JSMFType = String;
+						if(JSMFType =='') {
+							JSMFType = String; //By default put a String 
 							//console.log("Warning: no type or not idenfied type");
 						}
 						MElem.setAttribute(sFeature.name, JSMFType);
@@ -56,7 +55,8 @@ function(err, data) {
 						if(card==undefined) {card=1;}
 						//resolve reference type after the creation of all classes? 
                         composite = (composite!== undefined)?true:false;
-						MElem.setReference(sFeature.name,referenceType,card,composite); // TO BE set : eOpposite	
+                        // referenceType is a proxy of the type which has to be resolve with the real metaclass
+						MElem.setReference(sFeature.name, referenceType, card,undefined,composite); // TO BE set : eOpposite	
 					break;	
 					}
 				});
@@ -71,9 +71,11 @@ function(err, data) {
 	
 	var injectedmodel = new Model("TDA");
 	injectedmodel.setReferenceModel(InjectMetaModel);
-	var rootMetaModelElement = InjectMetaModel.modellingElements['TDAModel'];
+    //console.log(InjectMetaModel);
+	var rootMetaModelElement = InjectMetaModel.modellingElements['TDAModel'][0];
+    //console.log(rootMetaModelElement);
 	var uri = 'lu.tudor.tda:';
-    var rootModeELement = rootMetaModelElement.newInstance("");
+    var rootModeELement = rootMetaModelElement.newInstance('root');
 	fs.readFile(modelFile, {encoding: "UTF-8"}, 
 	function(err, data) {
 		var doc = new dom().parseFromString(data);
@@ -85,6 +87,7 @@ function(err, data) {
 
 //
 function buildModelFromRef(doc, modelT,currentElement) { 
+    //console.log(currentElement);
     var currentM2Element = currentElement.conformsTo();
     _.each(currentM2Element.__references, function(elem,index) {
         if(elem.composite==true) {
@@ -96,16 +99,17 @@ function buildModelFromRef(doc, modelT,currentElement) {
                 
                 //Get the class referenced by the current reference index (i.e., type of reference)
                 var referencedM2Class = currentM2Element.__references[index].type;
+                console.log(referencedM2Class[0].__references);
                 
                 //Create a new modelling element for the current reference index
-                var addedElement = referencedM2Class.newInstance();
-                
+                var addedElement = referencedM2Class[0].newInstance("a");
+                    
                 //set the model  (attributes)
                  _.each(elem.type.__attributes, function(el1,ind1) {
                      var setterfunction = "set"+ind1;
                     addedElement[setterfunction](nodes[i].getAttribute(ind1));
                 });
-                console.log(addedElement.name);
+               //console.log(addedElement.name);
                 var associationFunction = "set"+index;
                 
                 //create the relation between currentElement and referenced element
@@ -115,32 +119,31 @@ function buildModelFromRef(doc, modelT,currentElement) {
                 modelT.setModellingElement(addedElement);
                 
                 // Recursive Call (for each referenced element which are containement references)
-               // buildModelFromRef(doc,modelT,addedElement);
+                buildModelFromRef(doc,modelT,addedElement);
             }
         } 
     });
-    //console.log(currentElement);
 }
 
 //model
-function resolveReference(model, refModels) {
+function resolveReference(model) { //refModels
 	var listName= [];
 	for(z in model.modellingElements) {
-		listName.push(model.modellingElements[z].__name)
+		listName.push(model.modellingElements[z][0].__name);
 	}
 	for(i in model.modellingElements) {
-		var currentElement = model.modellingElements[i];
+		var currentElement = model.modellingElements[i][0];
 		for(e in currentElement.__references) {
 			var currentRef = currentElement.__references[e]; //WARNING current Ref can be instance of Array
 			// the element is present in the current Model
-				var realType = _.find(model.modellingElements,function(current) {return current.__name ==currentRef.type;}); //warning find the first that match, by name
+				var realType = _.find(model.modellingElements,function(current) {return current[0].__name ==currentRef.type;}); //warning find the first that match, by name
 				if(realType == undefined) {
 					// create a proxy element (the referenced model element is present in another model?)
 					console.log("modelling element not present in loaded models");
 				} else {
 					// current element is only a reference to the real element in the model
 					//console.log(e,currentRef);
-					model.modellingElements[i].setReference(e,realType,currentRef.card,currentRef.composite); //currentRef.opposite
+					model.modellingElements[i][0].setReference(e,realType,currentRef.card,undefined,currentRef.composite); //currentRef.opposite
 				}
 		}
 	}

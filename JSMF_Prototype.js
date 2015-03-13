@@ -139,17 +139,21 @@ Class.prototype.conformsTo = function () {
     return Class; //.prototype;
 };
 
-//Relation nature: Composition? Inheritance? etc...
-Class.prototype.setReference = function (name, type, cardinality, opposite) {
-    // verifier si le nom n'est pas  pris, -> exception
+//Relation nature: Composition: added
+Class.prototype.setReference = function (name, type, cardinality, opposite, composite) {
+    //check name?
     this.__references[name] = {
-        "type": type,
+        "type": type, //should check the type?
         "card": cardinality
     };
     //To be TESTED
     if (opposite !== undefined) {
         var tmp = this.__references[name];
         tmp.opposite = opposite;
+    }
+    if (composite !== undefined) {
+         var tmp = this.__references[name];
+        tmp.composite = composite;
     }
 };
 
@@ -241,6 +245,26 @@ Class.prototype.newInstance = function (name) {
     return result;
 };
 
+var Transition = Class.newInstance('Transition');
+	Transition.setAttribute('active', Boolean);			
+
+var Property = Class.newInstance('Property');
+	Property.setAttribute('blink', Number);
+
+var State = Class.newInstance('State');
+State.setAttribute('name', String);
+State.setAttribute('id', Number);
+                              
+State.setReference('transition', Transition, -1);
+ State.setReference('property',Property,1);
+
+s1 = State.newInstance('s1');
+  var tabOfInstance = {};
+ for(i in State.__references) {
+ var Type = State.__references[i].type;      
+ tabOfInstance[Type.__name]=Type.newInstance();
+  }
+console.log(tabOfInstance['Transition']);
 
 module.exports = {
 

@@ -383,6 +383,44 @@ describe('Create Class Instances', function() {
 			done();
 		})
 
+        //WARNING the references must be set AFTER the creation of Classes
+        it('Instance created from reference', function(done){
+			var Transition = Class.newInstance('Transition');
+	        Transition.setAttribute('active', Boolean);			
+
+            var Property = Class.newInstance('Property');
+	         Property.setAttribute('blink', Number);
+
+            var State = Class.newInstance('State');
+            State.setAttribute('name', String);
+            State.setAttribute('id', Number);
+                              
+            State.setReference('transition', Transition, -1);
+            State.setReference('property',Property, 1);
+
+            s1 = State.newInstance('s1');
+            var tabOfInstance = {};
+            for(i in State.__references) {
+                var Type = State.__references[i].type;      
+                tabOfInstance[Type.__name]=Type.newInstance();
+            }
+            
+            tabOfInstance['Transition'].should.have.property('setactive');
+            tabOfInstance['Property'].should.have.property('setblink');
+            var t1 = tabOfInstance['Transition'];
+            var p1 = tabOfInstance['Property'];
+            t1.should.have.property('setactive');
+            t1.active.should.be.empty;
+            t1.setactive(true);
+            t1.should.have.property('active',true);
+            
+            p1.blink.should.be.empty;
+            p1.setblink(182);
+            p1.should.have.property('blink',182);
+			
+			done();
+		})
+        
 		it('Instance Created with inheritance chain, attribute overriding (multiple times - each level keep its own definition) ', function(done){
 			var State = Class.newInstance('State');
 			State.setAttribute('id', Number);
@@ -695,17 +733,28 @@ describe('Create Class Instances', function() {
             
             //That should not work (inherited references) => but it may work with relaxed JSMF (cumulative types).
             s1.settransition(st1);
-            console.log(s1.transition.conformsTo());
+            //console.log(s1.transition.conformsTo());
             s1.should.have.property('transition',[st1]); 
              
 			done();
 		})
         
         it('Instances created with multiple inherented references', function(done){
-	       
+	       var State = Class.newInstance('State');
              
 			done();
 		})
         
 	})
+})
+
+/**********************************************************
+// Model/Metamodel (aka package/namespace) Creation 
+***********************************************************/
+describe('Create a Model (Namespace/Package)', function() {
+    describe('MetaModel - Reference Model',function() {
+        it('Metamodel Created', function(done) {
+            done();
+            })
+    })
 })
