@@ -5,13 +5,19 @@
  *   Authors : J.S. Sottet, A Vagner
  *
  *    Todo
- *      - Inheritance: ongoing
- *      - Checking :attributes and references overloading
- *      - implement different level of checking (type)
+ *      | Inheritance, Attributes and references overloading: Tested - Still missing For Reference inheritance
+ *      - implement different level of checking (type) : different conformances-flexibility
  *      - Checking for type in references according to supertypes inheritance chain
- *      - Checking for types that are not JS primitive types (attributes)
- *      - Persistance and Loading using JSON
- *		- Add keyword "Any" for loose typing
+ *      - Setting and Checking for types that are not JS primitive types (attributes)
+ *      - Persistence and Loading using JSON
+ *      - Enhance Persistence/check persistence with Neo4J -> using batch / update 
+ *      - load model from db neo4J?
+ *		- Add keyword "Any" for loose typing?
+ *      - Dynamic of objects/instances/classes e.g., adding an attribute to the clas after instanciation will allow the object to set/get the new attribute.
+ *      - Permit the addition of new attribute/relation without behing an instance of a specific class
+ *      - Add the inference/generalisation of instance attribute to class
+ *      - Add a checking between Models and Metamodel (conformance).
+ *      | Build a fonction that get all Attribute and/or all reference from the inheritance chain. To be tested
  *
  *   Done
  *      - Demotion (see JSMF_Utils)
@@ -37,6 +43,7 @@ Model.prototype.setModellingElement = function (Class) {
         if (tab == undefined) {
             tab = [];
         }
+        
         tab.push(Class);
         this.modellingElements[Class.conformsTo().__name] = tab;
     } else {
@@ -87,6 +94,7 @@ Model.prototype.setReferenceModel = function (metamodel) {
     this.referenceModel = metamodel;
 }
 
+//WARNING model could be correct in JSMF sense but not in Neo4J.
 Model.prototype.save = function () {
     // CHECK that ALL Referenced elements are valid in the DB : i.e., they have at least one attribute which is set...
     modelDB.saveModel(this);
@@ -132,6 +140,29 @@ Class.prototype.getInheritanceChain = function(result) {
     }
 }
 
+//
+Class.prototype.getAllReferences = function() {
+    var result=[];
+    result.push(this.__references)
+    var allsuperTypes = this.getInheritanceChain([]);
+    for(var i in allsuperTypes) {
+		refSuperType = allsuperTypes[i];
+        result.push(refSuperType.__references);
+	}
+    return result;  
+}
+
+Class.prototype.getAllAttributes = function() {
+    var result=[];
+    result.push(this.__attributes)
+    var allsuperTypes = this.getInheritanceChain([]);
+    for(var i in allsuperTypes) {
+		refSuperType = allsuperTypes[i];
+        result.push(refSuperType.__attributes);
+	}
+    return result;  
+}
+
 //Instance of MetaClass is conforms to Class.
 Class.prototype.conformsTo = function () {
     //var result = new Class("M3Class");
@@ -164,7 +195,7 @@ function makeAssignation(ob, index, attype) {
         if (param.__proto__ == type.__proto__) { //Strict equal?
             ob[index] = param;
         } else {
-            console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
+           // console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
         }
     };
 }
@@ -244,27 +275,6 @@ Class.prototype.newInstance = function (name) {
 
     return result;
 };
-
-var Transition = Class.newInstance('Transition');
-	Transition.setAttribute('active', Boolean);			
-
-var Property = Class.newInstance('Property');
-	Property.setAttribute('blink', Number);
-
-var State = Class.newInstance('State');
-State.setAttribute('name', String);
-State.setAttribute('id', Number);
-                              
-State.setReference('transition', Transition, -1);
- State.setReference('property',Property,1);
-
-s1 = State.newInstance('s1');
-  var tabOfInstance = {};
- for(i in State.__references) {
- var Type = State.__references[i].type;      
- tabOfInstance[Type.__name]=Type.newInstance();
-  }
-console.log(tabOfInstance['Transition']);
 
 module.exports = {
 

@@ -1,15 +1,19 @@
-var xpath = require('xpath')
+var xpath = require('xpath.js')
   , dom = require('xmldom').DOMParser;
 var fs = require('fs');
+//var libxmljs = require("libxmljs");
 var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF.Class;
 var _ = require('underscore');
-var inspect = require('eyes').inspector({maxLength: 900});
+var inspect = require('eyes').inspector({maxLength: 10900});
 var xml2js = require('xml2js');
 
 var ModelImport = [];
 
-var metaModelFile = __dirname + '/'+ '/TDA.ecore';
-var modelFile = __dirname + '/' + 'TDA2.xmi';
+//var metaModelFile = __dirname + '/'+ '/TDA.ecore';
+//var modelFile = __dirname + '/' + 'TDA2.xmi';
+
+var metaModelFile = __dirname + '/'+ 'JQueryMobile.ecore';
+var modelFile = __dirname + '/' + 'jqm.xmi';
 
 var parser = new xml2js.Parser();
 
@@ -67,20 +71,24 @@ function(err, data) {
 	});
 	resolveReference(InjectMetaModel);
 	//resolveInheritance(InjectModel);
-	//inspect(InjectMetaModel);
 	
 	var injectedmodel = new Model("TDA");
 	injectedmodel.setReferenceModel(InjectMetaModel);
-    //console.log(InjectMetaModel);
-	var rootMetaModelElement = InjectMetaModel.modellingElements['TDAModel'][0];
-    //console.log(rootMetaModelElement);
+
+	//var rootMetaModelElement = InjectMetaModel.modellingElements['TDAModel'][0];
+    var rootMetaModelElement = InjectMetaModel.modellingElements['PageHeader'][0];
+    
+   //WARNING: hould read the first node instead of creating it from nothing..
 	var uri = 'lu.tudor.tda:';
     var rootModeELement = rootMetaModelElement.newInstance('root');
+    //rootModeELement.setname('Root');
+    rootModeELement.settitle('ActorSearch');
 	fs.readFile(modelFile, {encoding: "UTF-8"}, 
 	function(err, data) {
 		var doc = new dom().parseFromString(data);
 		buildModelFromRef(doc,injectedmodel,rootModeELement);
-		//inspect(nodes);
+        //injectedmodel.save();
+		//inspect(injectedmodel);
 	});
 	
 });
@@ -89,25 +97,31 @@ function(err, data) {
 function buildModelFromRef(doc, modelT,currentElement) { 
     //console.log(currentElement);
     var currentM2Element = currentElement.conformsTo();
+    var addedElement = {};
     _.each(currentM2Element.__references, function(elem,index) {
         if(elem.composite==true) {
             //console.log(index, elem);
-            var getName = "//"+index;
-            nodes = xpath.select(getName, doc);
-            //for each nodes given by xpath query
+            var getName = "./"+index;
+             nodes = xpath(doc,getName); //originally xpath.select(getname,doc);
+            //for each nodes given by xpath query -> should be the right elements at the right level and not all the element as it is now...
             for( var i in nodes) {
                 
                 //Get the class referenced by the current reference index (i.e., type of reference)
                 var referencedM2Class = currentM2Element.__references[index].type;
-                console.log(referencedM2Class[0].__references);
                 
                 //Create a new modelling element for the current reference index
-                var addedElement = referencedM2Class[0].newInstance("a");
+                //var
+                addedElement = referencedM2Class[0].newInstance("a");
                     
                 //set the model  (attributes)
-                 _.each(elem.type.__attributes, function(el1,ind1) {
+                 _.each(referencedM2Class[0].__attributes, function(el1,ind1) {
                      var setterfunction = "set"+ind1;
-                    addedElement[setterfunction](nodes[i].getAttribute(ind1));
+                    if(nodes[i]==undefined) {console.log('undefined xml node for: ', ind1)} 
+                     else {
+                        var attributevalue= nodes[i].getAttribute(ind1);
+                        // set the attribute calling the setter function from a setter String
+                        addedElement[setterfunction](attributevalue);
+                     }
                 });
                //console.log(addedElement.name);
                 var associationFunction = "set"+index;
@@ -118,9 +132,21 @@ function buildModelFromRef(doc, modelT,currentElement) {
                 //Save the added element to the model
                 modelT.setModellingElement(addedElement);
                 
+               // console.log(currentElement.name);
+                console.log(addedElement.type, addedElement.name);
                 // Recursive Call (for each referenced element which are containement references)
-                buildModelFromRef(doc,modelT,addedElement);
+                buildModelFromRef(nodes[i],modelT,addedElement);
             }
+           /* for(var i in nodes) {
+            res = xpath(nodes[i],'./operator');
+                console.log(res[0].getAttribute('type'));
+            res2 = xpath(nodes[i],'//subTasks');
+                console.log(res2[0].getAttribute('type'));
+                for(var j in res2) {
+                    res3 = xpath(res2[j],'./operator');
+                    console.log(res3[0].getAttribute('type'));
+                }
+            }*/
         } 
     });
 }

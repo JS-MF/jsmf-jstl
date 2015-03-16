@@ -382,45 +382,7 @@ describe('Create Class Instances', function() {
 			s1.should.have.property('blink',182);
 			done();
 		})
-
-        //WARNING the references must be set AFTER the creation of Classes
-        it('Instance created from reference', function(done){
-			var Transition = Class.newInstance('Transition');
-	        Transition.setAttribute('active', Boolean);			
-
-            var Property = Class.newInstance('Property');
-	         Property.setAttribute('blink', Number);
-
-            var State = Class.newInstance('State');
-            State.setAttribute('name', String);
-            State.setAttribute('id', Number);
-                              
-            State.setReference('transition', Transition, -1);
-            State.setReference('property',Property, 1);
-
-            s1 = State.newInstance('s1');
-            var tabOfInstance = {};
-            for(i in State.__references) {
-                var Type = State.__references[i].type;      
-                tabOfInstance[Type.__name]=Type.newInstance();
-            }
-            
-            tabOfInstance['Transition'].should.have.property('setactive');
-            tabOfInstance['Property'].should.have.property('setblink');
-            var t1 = tabOfInstance['Transition'];
-            var p1 = tabOfInstance['Property'];
-            t1.should.have.property('setactive');
-            t1.active.should.be.empty;
-            t1.setactive(true);
-            t1.should.have.property('active',true);
-            
-            p1.blink.should.be.empty;
-            p1.setblink(182);
-            p1.should.have.property('blink',182);
-			
-			done();
-		})
-        
+ 
 		it('Instance Created with inheritance chain, attribute overriding (multiple times - each level keep its own definition) ', function(done){
 			var State = Class.newInstance('State');
 			State.setAttribute('id', Number);
@@ -753,7 +715,48 @@ describe('Create Class Instances', function() {
 ***********************************************************/
 describe('Create a Model (Namespace/Package)', function() {
     describe('MetaModel - Reference Model',function() {
-        it('Metamodel Created', function(done) {
+        it('Metamodel Created with one Meta element inside', function(done) {
+            
+            var ReferenceModel = new Model("Reference");
+            var State = Class.newInstance('State');
+            ReferenceModel.setModellingElement(State);
+            ReferenceModel.modellingElements.should.have.keys('State');
+            ReferenceModel.modellingElements['State'][0].should.be.equal(State);
+            //.should.be.equal([State]);
+            done();
+            })
+        
+        it('Metamodel Created with one Meta element inside', function(done) {
+           
+            var ReferenceModel = new Model("Reference");
+            var State = Class.newInstance('State');
+            ReferenceModel.setModellingElement(State);
+            ReferenceModel.modellingElements.should.have.keys('State');
+            ReferenceModel.modellingElements.should.have.property('State',[State]);
+            ReferenceModel.modellingElements['State'][0].should.be.equal(State);
+            //.should.be.equal([State]);
+            done();
+            })
+    })
+    describe('Model - Containing Instance of  MetaModel elements',function() {
+         it('Metamodel Created and Model Associated with corresponding Instances', function(done) {         
+             
+            var ReferenceModel = new Model('Reference');
+            var State = Class.newInstance('State');
+            ReferenceModel.setModellingElement(State);
+            ReferenceModel.modellingElements['State'][0].should.be.equal(State);
+                 
+            var modelI = new Model('Instance');
+            modelI.setReferenceModel(ReferenceModel);
+            var s1 = State.newInstance('s1');
+            var s2 = State.newInstance('s2');
+             
+            modelI.setModellingElement(s1);
+            modelI.setModellingElement(s2);
+            
+            modelI.modellingElements.should.have.keys('State');
+            modelI.modellingElements.should.have.property('State',[s1,s2]);
+            console.log(modelI.modellingElements[State]); 
             done();
             })
     })
