@@ -176,7 +176,7 @@ Class.prototype.setReference = function (name, type, cardinality, opposite, comp
     this.__references[name] = {
         "type": type, //should check the type?
         "card": cardinality
-    };
+    }
     //To be TESTED
     if (opposite !== undefined) {
         var tmp = this.__references[name];
@@ -186,6 +186,19 @@ Class.prototype.setReference = function (name, type, cardinality, opposite, comp
          var tmp = this.__references[name];
         tmp.composite = composite;
     }
+};
+
+function Enum(name) {
+    this.__name = name;
+    this.__literals = {};
+}
+
+Enum.prototype.conformsTo = function() {return Enum;}
+
+Enum.prototype.setLiteral = function(name, value) {
+     if (_.contains(this.__literals, name)) {} else {
+        this.__literals[name]=value;
+     }
 };
 
 function makeAssignation(ob, index, attype) {
