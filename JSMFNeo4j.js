@@ -1,3 +1,10 @@
+/* **************************************
+TODO:
+    - add logger
+    - make a version with batch processing
+    - read from DB
+    - update nodes/model
+*************************************** */
 var serverURL = "http://localhost:7474";
 var neo4j = require('node-neo4j');
 var async = require("async");
@@ -68,7 +75,8 @@ for(i in ModelElement.conformsTo().__attributes) {
     if(err) {
         throw err   
     } else {
-        console.log(result[0]._id);
+        return(result[0]._id);
+        
     }
  });
 }
@@ -124,6 +132,7 @@ function saveModel(Model) {
 		  }
         
         var labelMetaClass = element.conformsTo().__name;
+        var labelModelName = element.conformsTo().__name;
         
         //WARNING We are in presence of undefined metaelement OR a metaclass
         if(labelMetaClass==undefined) {      
@@ -131,7 +140,7 @@ function saveModel(Model) {
         }
        
 		db.insertNode(pushObject , 
-			labelMetaClass,
+			[labelMetaClass,labelModelName],
 			function(err, result) {
 				if(err) {
 					throw err;

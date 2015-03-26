@@ -1,3 +1,15 @@
+/* *********************************
+    -Ecore
+        - packages
+        - multimodels references
+    -  M2
+        - Resolve Inheritance
+        - Add enum types
+        - Add other datatypes
+    - M1
+        - Resolve Reference (using Xpath)
+******************************************/
+
 var xpath = require('xpath.js')
   , dom = require('xmldom').DOMParser;
 var fs = require('fs');
@@ -6,6 +18,7 @@ var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF
 var _ = require('underscore');
 var inspect = require('eyes').inspector({maxLength: 10900});
 var xml2js = require('xml2js');
+var cheerio = require('cheerio');
 
 var ModelImport = [];
 
@@ -23,7 +36,7 @@ fs.readFile(metaModelFile, {encoding: "UTF-8"},
 function(err, data) {
 	parser.parseString(data, function (err, domain) {
 		_.each(domain,function(element,index,list) { 
-			_.each(element.eClassifiers, function(el1,ind1,list1) {
+			_.each(element.eClassifiers, function(el1,ind1,list1) { //check for packages
 				var Local = el1.$;
 				//if(local.xsi:type=='Ecore:EClass') { // ECLass vs EEnum
 				var MElem = new Class(Local.name);
@@ -44,7 +57,7 @@ function(err, data) {
 							case "EBoolean":
 								JSMFType = Boolean;
 							break;
-							//WARNING : no else cases
+							//WARNING : no else cases, enumeration, etc...
 						}
 						if(JSMFType =='') {
 							JSMFType = String; //By default put a String 
@@ -87,14 +100,15 @@ function(err, data) {
 	function(err, data) {
 		var doc = new dom().parseFromString(data);
 		buildModelFromRef(doc,injectedmodel,rootModeELement);
-       // resolveInstanceReference(injectedmodel,doc,rootModeELement);
+            //resolveInstanceReference(injectedmodel,doc,rootModeELement);
         //injectedmodel.save();
 		//inspect(injectedmodel);
 	});
 	
 });
 
-//
+//Build a ref xmlpath<->JSMF_Instance?
+// use cheerio here
 function buildModelFromRef(doc, modelT,currentElement) { 
     //console.log(currentElement);
     var currentM2Element = currentElement.conformsTo();
@@ -102,7 +116,7 @@ function buildModelFromRef(doc, modelT,currentElement) {
     _.each(currentM2Element.__references, function(elem,index) {
         if(elem.composite==true) {
            // console.log(index);
-            var getName = "./"+index;
+            var getName = "./"+index; //use cheerio instead
              nodes = xpath(doc,getName); //originally xpath.select(getname,doc);
             //for each nodes given by xpath query -> should be the right elements at the right level and not all the element as it is now...
             
@@ -134,11 +148,18 @@ function buildModelFromRef(doc, modelT,currentElement) {
                 modelT.setModellingElement(addedElement);
                 
                // console.log(currentElement.name);
-                console.log(addedElement.type, addedElement.name, index);
+                //console.log(addedElement.type, addedElement.name, index);
+                
                 // Recursive Call (for each referenced element which are containement references)
                 buildModelFromRef(nodes[i],modelT,addedElement);
             }
-        } 
+        }
+        //standard Ecore Reference to be resolve later
+        else {
+            var getName = ".";
+             nodes = xpath(doc,getName);
+            console.log(index, elem); 
+        }
     });
 }
 
@@ -166,13 +187,22 @@ function resolveReference(model) { //refModels
 	}
 }
 
-/*function resolveInstanceReference(model,doc,currentModelElement) {
+function resolveInheritance(model){
+    var
+    
+}
+
+
+function resolveInstanceReference(model,doc,currentModelElement) {
     var currentM2Element = currentModelElement.conformsTo();
     var addedElement = {};
+    
+    
+    
     _.each(currentM2Element.__references, function(elem,index) {
+        console.log('current',index);
         if(elem.composite==false) {
-            console.lo(elem);
+            console.log(elem);
         }
-    }
+    });
 }
-*/
