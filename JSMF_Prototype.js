@@ -142,12 +142,16 @@ Class.prototype.getInheritanceChain = function(result) {
 
 //
 Class.prototype.getAllReferences = function() {
-    var result=[];
-    result.push(this.__references)
+    var result={};
+    _.each(this.__references, function(elem, index) {
+        result[index]=elem;
+    });
     var allsuperTypes = this.getInheritanceChain([]);
     for(var i in allsuperTypes) {
 		refSuperType = allsuperTypes[i];
-        result.push(refSuperType.__references);
+        _.each(refSuperType.__references, function(elem, index) {
+            result[index]=elem;
+        });
 	}
     return result;  
 }
@@ -170,7 +174,7 @@ Class.prototype.conformsTo = function () {
     return Class; //.prototype;
 };
 
-//Relation nature: Composition: added
+//Relation nature: Composition: added +unprecised number of arguments key/value toset some addition info on the reference.
 Class.prototype.setReference = function (name, type, cardinality, opposite, composite) {
     //check name?
     this.__references[name] = {
