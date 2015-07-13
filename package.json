@@ -28,6 +28,6 @@
     "type": "git",
     "url": "git@git.tudor.lu:model/JavaScriptModellingFramework.git"
   },
-  "author": "JS Sottet",
+  "author": "JS Sottet and contributors",
   "license": "BSD-2-Clause"
 }

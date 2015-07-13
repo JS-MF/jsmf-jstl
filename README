@@ -3,10 +3,10 @@ modelling frameworks such as EMF.
 Moreover, we want to push forward web technologies which could bring a lot to
 model engineering (easy deployement, client-based transformations, cloud, etc.).
 
-Thus JSMF propose an overhaul of classical modelling framework into Javascript.
+Thus JSMF propose an overhaul of classical modelling frameworks into Javascript.
 It does not aim at replacing all the features of EMF, but propose a rather 
 simpler implementation of conformance relation, model and metamodel creation.
-It is notably inspired by EMF dynamic instanc, e.g., dynamic creation of model
+It is notably inspired by EMF dynamic instances, e.g., dynamic creation of model
 properties (attributes/references setters).
 
 Specific Features:
@@ -16,7 +16,6 @@ models (see Natural Modelling).
 - promotion mechanism that allows the (meta)model designers to create a 
 metamodel form modelling elements
 
-Later on, we planned to define an inference mechanism that permit to create 
+Later on, we have planned to define an inference mechanism that permit to create 
 metamodels elements from examples models (in other words metamodel emergence).
 
-Usage:
