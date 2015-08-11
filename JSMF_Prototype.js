@@ -140,6 +140,7 @@ Class.prototype.getInheritanceChain = function(result) {
     }
 }
 
+
 //
 Class.prototype.getAllReferences = function() {
     var result={};
@@ -224,8 +225,7 @@ function makeReference(ob, index, type, card) {
         if (card == 1 && elementsinrelation >= 1) {
             console.log("error trying to assign multiple elements to a single reference");
         } else {
-            if (type === Class) { //bypasscheckType
-                //console.log("Generic Type");
+            if (type === Class) { // <=> bypasscheckType
                 ob[index].push(param);
             } else {
                 if (type instanceof Array) { //warning checking all the element type in array
@@ -234,10 +234,12 @@ function makeReference(ob, index, type, card) {
                     } else {
                         console.log("assigning wrong type: " + param.conformsTo().__name + " Expecting types in " + type);
                     }
-                } else {
-                    if (type == param.conformsTo() || _.contains(type, param.getInheritanceChain)) { //To be tested
+                } else {                    
+                    if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) { //|| _.contains(type, param.getInheritanceChain([])) 
                         ob[index].push(param);
                     } else {
+                        console.log(_.contains(param.conformsTo().getInheritanceChain([])),type);
+                        console.log(param.conformsTo().getInheritanceChain([]))
                         //ob[index].push(param); //WARNING DO the push if type 
                         console.log("assigning wrong type: " + param.conformsTo().__name + " to current reference." + " Type " + type.__name + " was expected");
                     }
@@ -293,6 +295,7 @@ Class.prototype.newInstance = function (name) {
     return result;
 };
 
+
 module.exports = {
 
     Class: Class,
@@ -300,3 +303,4 @@ module.exports = {
     Model: Model
 
 };
+
