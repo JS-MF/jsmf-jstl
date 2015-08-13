@@ -20,11 +20,11 @@
  *      | Build a fonction that get all Attribute and/or all reference from the inheritance chain. To be tested
  *
  *   Done
- *      - Demotion (see JSMF_Utils)
+ *      | Demotion/Promotion (see JSMF_Utils) --> to be enhanced thanks to model<->reference model associations
  *
  */
 
-var modelDB = require('./JSMFNeo4j.js'); // TODO Make a wrapper for DB (
+var modelDB = require('./JSMFNeo4j.js'); // not direclty requiering Neo4J-JSMF
 var _ = require('underscore');
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
@@ -89,6 +89,12 @@ Model.prototype.setModellingElements = function (ClassTab) {
         this.setModellingElement(ClassTab);
     }
 };
+
+
+Model.prototype.Filter = function(Classifier) {
+ return this.modellingElements[Classifier.__name] ;  
+    
+}
 
 Model.prototype.setReferenceModel = function (metamodel) {
     this.referenceModel = metamodel;
