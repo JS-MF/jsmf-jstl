@@ -15,7 +15,14 @@ JSMF, tough it is a simplification, proposes additional features such as:
 models (see Natural Modelling).
 - promotion mechanism that allows the (meta)model designers to create a 
 metamodel form modelling elements
+- Persistence in graph DB
 
 Later on, we have planned to define an inference mechanism that permit to create 
 metamodels elements from examples models (in other words metamodel emergence).
+
+We currently added one feature:
+- JSMF on web
+
+JSTL: JavaScript Transformation Language, an equivalent to ATL for JSMF.
+
 

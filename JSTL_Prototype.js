@@ -3,9 +3,12 @@
 *   Copyright LIST - 
 *   Author : JS Sottet
 *   Contributors : A. Garcia-Frey, A Vagner
-* ideas : could extend JSMF model and class in order to support specific operation (such as filter on Class)
+* ideas to be implemented : could extend JSMF model and class in order to support specific operation (such as filter on Class)
+*                           could show transformation execution step by step, construct a model, etc.
+*   todo : 
+            - Rule extension (inheritance)
+            - Multiple input/output models
 */
-
 
 var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF.Class;
 //var _ = require('underscore');
@@ -37,18 +40,24 @@ TransformationModule.prototype.apply = function(rule) {
     
     //process output model elements
     _.each(i, function(id,index){
-        var output = rule.out(id); 
-        //this.outputModel.setModellingElement ...
-            //console.log('id', id);
-        //WARNING only one output model... one output element i.e., output[0] ... but other outputpatterns can be elicited!!!! 
-        self.resolver[JSON.stringify(id)]=output[0]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
-     
+        var output = rule.out(id);  
+        /* //old version: only 1 relation and 1 outputmodel element
+        self.resolver[JSON.stringify(id)]=output[0]; 
+        
         if(output[1]!=undefined) {
             self.resolveRef.push(output[1]); //do a for each elem in output
         }
-        self.outputModel.setModellingElement(output[0]);
+        */
         
-        //console.log(mb.modellingElements);
+        _.each(output, function(idx,index) { 
+            if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
+                self.resolveRef.push(output[index]);
+            } else { //is outputelement (i.e. has a metamodel)
+                self.resolver[JSON.stringify(id)]=output[index]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
+                self.outputModel.setModellingElement(output[index]); //set the reference to created model element to outputModel
+            }
+        });
+            
     });
 }
 
