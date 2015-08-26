@@ -701,6 +701,29 @@ describe('Create Class Instances', function() {
 			done();
 		})
         
+        
+        it('Instance created with reference to an inhereted class', function(done) { //Alain's reported bug
+            var State = Class.newInstance('State');
+            var Transition = Class.newInstance('Transition');
+            var SubState = Class.newInstance('SubState');
+            
+            SubState.setSuperType(State);
+            
+            Transition.setReference('states',State,-1);
+            
+            s1= State.newInstance('s1');
+            t1 =  Transition.newInstance('t1');
+            sub = SubState.newInstance('sub');
+            
+            t1.setstates(sub);
+          //  t1.should.have.property('states',[sub]);
+            
+          //  t1.settransition(s1);
+          //  t1.should.have.property('states',[sub,s1])
+            
+           done(); 
+        });
+        
         it('Instances created with multiple inherented references', function(done){
 	       var State = Class.newInstance('State');
              

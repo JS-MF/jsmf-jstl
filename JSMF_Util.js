@@ -32,7 +32,7 @@ function ModelCopy(SourceME, TargetME) {
     //});
 }
 
-//extract model of a metamodel
+//extract model of a metamodel ->should only promote/demote models -> chain of conformance to be kept
 function demote(MetaModel) {
 
     var result = new Model(MetaModel.__name + "_Demoted");

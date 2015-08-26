@@ -6,6 +6,7 @@
  *
  *    Todo
  *      | Inheritance, Attributes and references overloading: Tested - Still missing For Reference inheritance
+ *      - Get all the attribute of a given "Model"
  *      - implement different level of checking (type) : different conformances-flexibility
  *      - Checking for type in references according to supertypes inheritance chain
  *      - Setting and Checking for types that are not JS primitive types (attributes)
@@ -20,12 +21,12 @@
  *      | Build a fonction that get all Attribute and/or all reference from the inheritance chain. To be tested
  *
  *   Done
- *      - Demotion (see JSMF_Utils)
+ *      | Demotion/Promotion (see JSMF_Utils) --> to be enhanced thanks to model<->reference model associations
  *
  */
 
 // if jsmf.set('db','neo4j') { load JSMFNeo4j.js module }; // how parameter it? ip address and port number?
-var modelDB = require('./JSMFNeo4j.js'); // TODO Make a wrapper for DB (
+var modelDB = require('./JSMFNeo4j.js'); // not direclty requiering Neo4J-JSMF
 var _ = require('underscore');
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
@@ -46,6 +47,7 @@ Model.prototype.setModellingElement = function (Class) {
         }
         
         tab.push(Class);
+        console.log('ConformsTo : ', Class.conformsTo().__name); 
         this.modellingElements[Class.conformsTo().__name] = tab;
     } else {
         if (tab == undefined) {
@@ -53,6 +55,31 @@ Model.prototype.setModellingElement = function (Class) {
         }
         tab.push(Class);
         this.modellingElements[Class.__name] = tab;
+       
+    }
+};
+
+//
+Model.prototype.setModellingElements = function (ClassTab) {
+    if (ClassTab instanceof Array) {
+        for (i in ClassTab) {
+            if (ClassTab[i].__name == undefined) { //i.e. not  a meta-element
+                var tab = [];
+     
+                tab = this.modellingElements[ClassTab[i].conformsTo().__name];
+                if (tab == undefined) {
+                    tab = [];
+                }
+                tab.push(ClassTab[i]);
+                this.modellingElements[ClassTab[i].conformsTo().__name] = tab;
+               // console.log('Conformsto: ', ClassTab[i].conformsTo().__name);
+            } else {
+                this.modellingElements[ClassTab[i].__name] = ClassTab[i];
+            }
+        }
+    } else {
+        console.error("Unable to set one element use Model.setModellingElements calling setModellingElement with only one element.");
+        this.setModellingElement(ClassTab);
     }
 };
 
@@ -69,27 +96,11 @@ Model.prototype.contains = function (ModelElement) {
     return result;
 }
 
-Model.prototype.setModellingElements = function (ClassTab) {
-    if (ClassTab instanceof Array) {
-        for (i in ClassTab) {
-            if (ClassTab[i].__name == undefined) { //i.e. not  a meta-element
-                var tab = [];
-                //console.log(Class.conformsTo());
-                tab = this.modellingElements[ClassTab[i].conformsTo().__name];
-                if (tab == undefined) {
-                    tab = [];
-                }
-                tab.push(ClassTab[i]);
-                this.modellingElements[ClassTab[i].conformsTo().__name] = tab;
-            } else {
-                this.modellingElements[ClassTab[i].__name] = ClassTab[i];
-            }
-        }
-    } else {
-        console.error("Unable to set one element use Model.setModellingElements calling setModellingElement with only one element.");
-        this.setModellingElement(ClassTab);
-    }
-};
+
+Model.prototype.Filter = function(Classifier) {
+ return this.modellingElements[Classifier.__name] ;  
+    
+}
 
 Model.prototype.setReferenceModel = function (metamodel) {
     this.referenceModel = metamodel;
@@ -110,7 +121,7 @@ function Class(name) {
 }
 
 Class.newInstance = function (classname){ 
-	var Obj = new Class(classname); 
+	var Obj = new Class(classname);  //here check promote/demote functions
 	return Obj; 
 };
 
@@ -193,9 +204,13 @@ Class.prototype.setReference = function (name, type, cardinality, opposite, comp
     }
 };
 
+/******************************
+//Enum definition : should extend class? or a super class classifier?
+*****************************/
 function Enum(name) {
     this.__name = name;
     this.__literals = {};
+    return this;
 }
 
 Enum.prototype.conformsTo = function() {return Enum;}
@@ -206,6 +221,13 @@ Enum.prototype.setLiteral = function(name, value) {
      }
 };
 
+Enum.prototype.getValue= function(name) {
+    return this.__literals[name];
+}
+
+/****************************************************************************************
+*       Building Instance: attributes and references conforms to metamodel elements
+****************************************************************************************/
 function makeAssignation(ob, index, attype) {
     //if attype = primitive JS type else ...
     var type = new attype;
@@ -213,7 +235,7 @@ function makeAssignation(ob, index, attype) {
         if (param.__proto__ == type.__proto__) { //Strict equal?
             ob[index] = param;
         } else {
-           // console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
+            console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
         }
     };
 }
@@ -225,8 +247,7 @@ function makeReference(ob, index, type, card) {
         if (card == 1 && elementsinrelation >= 1) {
             console.log("error trying to assign multiple elements to a single reference");
         } else {
-            if (type === Class) { //bypasscheckType
-                //console.log("Generic Type");
+            if (type === Class) { // <=> bypasscheckType
                 ob[index].push(param);
             } else {
                 if (type instanceof Array) { //warning checking all the element type in array
@@ -235,10 +256,12 @@ function makeReference(ob, index, type, card) {
                     } else {
                         console.log("assigning wrong type: " + param.conformsTo().__name + " Expecting types in " + type);
                     }
-                } else {
-                    if (type == param.conformsTo() || _.contains(type, param.getInheritanceChain)) { //To be tested
+                } else {                    
+                    if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) { //|| _.contains(type, param.getInheritanceChain([])) //WARNING : Debugging Inheritance issue by Ava
                         ob[index].push(param);
                     } else {
+                        console.log(_.contains(param.conformsTo().getInheritanceChain([])),type);
+                        console.log(param.conformsTo().getInheritanceChain([]))
                         //ob[index].push(param); //WARNING DO the push if type 
                         console.log("assigning wrong type: " + param.conformsTo().__name + " to current reference." + " Type " + type.__name + " was expected");
                     }
@@ -273,8 +296,12 @@ Class.prototype.newInstance = function (name) {
 
     //create setter for attributes (super attributes will be overwritten if they have the same name)
     for (var i in this.__attributes) {
-        result[i] = new this.__attributes[i]();
-        var attype = this.__attributes[i];
+        if(this.__attributes[i].conformsTo== undefined) {
+            result[i] = new this.__attributes[i](); //Warning work for JS primitive types... and any function ... but not for enum type overload primitves?
+            var attype = this.__attributes[i];
+        } else {
+            console.log(this.__attributes[i]);
+        }
         result["set" + i] = makeAssignation(result, i, attype);
     }
 
@@ -294,10 +321,13 @@ Class.prototype.newInstance = function (name) {
     return result;
 };
 
+//Export three main framework functions
 module.exports = {
 
     Class: Class,
 
-    Model: Model
+    Model: Model,
+    
+    Enum : Enum
 
 };
