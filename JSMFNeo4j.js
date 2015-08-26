@@ -140,7 +140,7 @@ function saveModel(Model) {
         }
        
 		db.insertNode(pushObject , 
-			[labelMetaClass,labelModelName],
+			[labelMetaClass,labelModelName,Model.__name], //Add Model.__name as label to the object (Utility of labelModelName?)
 			function(err, result) {
 				if(err) {
 					throw err;

@@ -24,6 +24,7 @@
  *
  */
 
+// if jsmf.set('db','neo4j') { load JSMFNeo4j.js module }; // how parameter it? ip address and port number?
 var modelDB = require('./JSMFNeo4j.js'); // TODO Make a wrapper for DB (
 var _ = require('underscore');
 
