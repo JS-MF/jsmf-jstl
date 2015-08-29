@@ -1,13 +1,15 @@
 /*
 *  JSTL _ Javascript Transformation Language for JSMF
-*   Copyright LIST - 
+*   Copyright 2015 ©  LIST - Luxembourg Institute of Science and Technology
 *   Author : JS Sottet
-*   Contributors : A. Garcia-Frey, A Vagner
+*   Contributors :  A Vagner, A Garcia Frey
 * ideas to be implemented : could extend JSMF model and class in order to support specific operation (such as filter on Class)
 *                           could show transformation execution step by step, construct a model, etc.
 *   todo : 
             - Rule extension (inheritance)
             - Multiple input/output models
+            - Hide the complex object for input
+            - Make a version that hide the "new Instance" - i.e., remove the require JSMF
 */
 
 var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF.Class;
@@ -41,14 +43,7 @@ TransformationModule.prototype.apply = function(rule) {
     //process output model elements
     _.each(i, function(id,index){
         var output = rule.out(id);  
-        /* //old version: only 1 relation and 1 outputmodel element
-        self.resolver[JSON.stringify(id)]=output[0]; 
-        
-        if(output[1]!=undefined) {
-            self.resolveRef.push(output[1]); //do a for each elem in output
-        }
-        */
-        
+      
         _.each(output, function(idx,index) { 
             if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
                 self.resolveRef.push(output[index]);

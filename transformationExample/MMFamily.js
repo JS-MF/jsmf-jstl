@@ -17,7 +17,7 @@ Member.setReference('familyMother', Family,1, 'mother');
 Member.setReference('familySon', Family,1, 'sons');
 Member.setReference('familyDaughter', Family,1, 'daugthers');
 
-console.log(Family.__references['father']);
+//console.log(Family.__references['father']);
 
 mma.setModellingElements([Family,Member]);
 

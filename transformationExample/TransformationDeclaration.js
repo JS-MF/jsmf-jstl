@@ -82,4 +82,4 @@ inspect(M.mb);
 //(_(M.mb.Filter(MM.B)).first()); 
 
 //Persiste Model in DB (using the Neo4J connector
-//M.mb.save();
+M.mb.save();

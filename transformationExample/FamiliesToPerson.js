@@ -24,7 +24,45 @@ function isFemale(member) {
     //Warning writting the function name... checking empty table
     return (member.familyMother.length!=0 || member.familyDaughter.length!=0);
 }
-//do a function for lastname
+
+//Give the FamilyName the Meta way
+function familyName(member) {
+    var result = '';
+    var keys = []; 
+    
+    _.each((member.conformsTo().__references), function(n,key){ //should also work chaining select and each
+       if(n.type.__name=='Family') {
+            keys.push(key);
+        }   
+    });
+    //console.log(keys);
+    _.each(keys, function(id,el){
+        if(member[id].length==0) {
+            // do nothing   
+        } else {
+            result = member[id][0].lastName;
+        }
+    });
+    return result;
+}
+
+function familyName(member) {
+ var result = '' ;   
+    if(member.familyFather[0] != undefined) {
+       member.familyFather[0].lastName;
+    }
+    if(member.familyMother.length!=0) {
+        member.familyMother[0].lastName;   
+    }
+    if(member.familySon.length!=0) {
+        member.familySon[0].lastName;
+    }
+     if(member.familyDaughter.length!=0) {
+        member.familyDaughter[0].lastName;
+    }
+}
+
+
 
 //Rule
 var Member2Male = {                                     
@@ -37,8 +75,8 @@ var Member2Male = {
     },
     
     out : function(inp) { 
-        var d = MMO.Male.newInstance('');    
-        d.setfullName(inp.firstName+'');                        
+        var d = MMO.Male.newInstance(''); 
+        d.setfullName(inp.firstName+' '+familyName(inp));                        
         return [d];                 
     }
 }
@@ -47,16 +85,15 @@ var Member2FeMale = {
     
     in : function(inputModel) {                      
         return  _.select(inputModel.Filter(MMI.Member),
-                    function(elem){
-                        //console.log(elem);
+                    function(elem){ 
                         return isFemale(elem);           
-                      // return isFemale(elem);       
                     });              
     },
     
     out : function(inp) { 
         var d = MMO.Female.newInstance('');    
-        d.setfullName(inp.firstName+'');                        
+        familyName(inp);
+        d.setfullName(inp.firstName+' '+familyName(inp));                        
         return [d];                 
     }
 }
@@ -76,3 +113,5 @@ module.addRule(Member2FeMale);
 module.applyAllRules();
 
 inspect(Mo);
+
+Mo.save();

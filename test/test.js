@@ -631,6 +631,47 @@ describe('Create Class Instances', function() {
 			done();
 		})
          
+         
+         //Opposite!
+         it('Instance Created with simple opposite relations', function(done){
+			var State = Class.newInstance('State');
+			var Transition = Class.newInstance('Transition');
+            State.setReference('transition', Transition, -1, 'source');
+            Transition.setReference('source', State, 1, 'transition'); //'transition'
+             
+             
+            State.__references['transition'].opposite.should.equal('source');
+            Transition.__references['source'].opposite.should.equal('transition');
+             
+            s1 = State.newInstance('s1');
+            s1.should.have.property('settransition');
+            s1.conformsTo().__references.should.have.keys('transition');
+            s1.conformsTo().__references['transition'].type.should.equal(Transition);
+            s1.conformsTo().__references['transition'].opposite.should.equal('source');
+            s1.transition.should.be.empty;
+            
+            t1 = Transition.newInstance('t1');
+            t1.should.have.property('setsource');
+            t1.conformsTo().__references['source'].type.should.equal(State);
+            t1.conformsTo().__references['source'].opposite.should.equal('transition');
+            (t1.transition === undefined).should.be.true;
+            t1.source.should.be.empty
+          
+            s1.settransition(t1);
+            s1.transition.should.not.be.empty;
+            s1.should.have.property('transition',[t1]);
+            s1.transition[0].should.equal(t1);
+            s1.transition.length.should.equal(1); //no more in case of multiple opposite assignations
+             
+           // t1.setsource(s1);
+            t1.source.should.not.be.empty;
+            t1.should.have.property('source',[s1]);
+            t1.source[0].should.equal(s1);
+            t1.source.length.should.equal(1); // idem no more..
+             
+			done();
+		})
+         
          it('Instances created with simple inherited Reference', function(done){
 			var State = Class.newInstance('State');
             var Transition = Class.newInstance('Transition');

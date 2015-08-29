@@ -138,7 +138,7 @@ function saveModel(Model) {
         if(labelMetaClass==undefined) {      
             labelMetaClass = Model.__name+"_Class_Undefined";
         }
-       
+       console.log('object to push',pushObject);
 		db.insertNode(pushObject , 
 			[labelMetaClass,labelModelName],
 			function(err, result) {
@@ -306,10 +306,12 @@ function createReferencesCVERSION(ModelElement, callback5) {
 //debug 
         //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
 		db.readNodesWithLabelsAndProperties (labelMetaClass, pushObject, function (err, result) {	
-			if(result.lenght!=0) {
-				//Always return the first value (oldest node)
-				idSource = result[0]._id;		
-			} else { console.log("Error object not found in Database")};	
+			if(result!=undefined){
+                if(result.lenght!=0) {
+				    //Always return the first value (oldest node)
+				    idSource = result[0]._id;		
+			     } else { console.log("Error object not found in Database")};	
+            } else {console.log("Error object not found in Database");}	
 			callback1();
 		});
 	},	function(callback3) {

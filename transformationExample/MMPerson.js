@@ -9,7 +9,7 @@ var Male = Class.newInstance('Male');
 var Female = Class.newInstance('Female');
 
 Male.setSuperType(Person);
-Female.setSuperType(Female);
+Female.setSuperType(Person);
 
 
 mmb.setModellingElements([Person,Male,Female]);

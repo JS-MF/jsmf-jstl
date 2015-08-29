@@ -15,14 +15,20 @@
  *      - load model from db neo4J?
  *		- Add keyword "Any" for loose typing?
  *      - Dynamic of objects/instances/classes e.g., adding an attribute to the clas after instanciation will allow the object to set/get the new attribute.
+ *           - also see conformance flexibility
  *      - Permit the addition of new attribute/relation without behing an instance of a specific class
+ *            - also see conformance flexibility
  *      - Add the inference/generalisation of instance attribute to class
  *      - Add a checking between Models and Metamodel (conformance).
+ *      - Do the Opposite relation automatic building.
  *      | Build a fonction that get all Attribute and/or all reference from the inheritance chain. To be tested
- *
- *   Done
  *      | Demotion/Promotion (see JSMF_Utils) --> to be enhanced thanks to model<->reference model associations
  *
+ *  Done
+ *      - Build a filter function that get all the element of a given type
+ *
+ *  Bug
+ *      - Inheritance issue (see Ava Bug)
  */
 
 var modelDB = require('./JSMFNeo4j.js'); // not direclty requiering Neo4J-JSMF
@@ -46,7 +52,7 @@ Model.prototype.setModellingElement = function (Class) {
         }
         
         tab.push(Class);
-        console.log('ConformsTo : ', Class.conformsTo().__name); 
+       // console.log('ConformsTo : ', Class.conformsTo().__name); 
         this.modellingElements[Class.conformsTo().__name] = tab;
     } else {
         if (tab == undefined) {
@@ -141,6 +147,7 @@ Class.prototype.setSuperType = function (Class) {
 }
 
 Class.prototype.getInheritanceChain = function(result) {
+
     if (Object.getOwnPropertyNames(this.__superType).length == 0 || this.__superType == undefined) {
         return result;
     } else {
@@ -169,6 +176,7 @@ Class.prototype.getAllReferences = function() {
 
 Class.prototype.getAllAttributes = function() {
     var result=[];
+   
     result.push(this.__attributes)
     var allsuperTypes = this.getInheritanceChain([]);
     for(var i in allsuperTypes) {
@@ -239,17 +247,18 @@ function makeAssignation(ob, index, attype) {
     };
 }
 
-function makeReference(ob, index, type, card) {
+// Adding the creaiton of opposite except for ARRAY of Type
+function makeReference(ob, index, type, card, opposite) {
     return function (param) {
         //CheckCardinalities
         var elementsinrelation = ob[index].length;
         if (card == 1 && elementsinrelation >= 1) {
             console.log("error trying to assign multiple elements to a single reference");
         } else {
-            if (type === Class) { // <=> bypasscheckType
+            if (type === Class) { // <=> bypasscheckType, equivalent to any
                 ob[index].push(param);
             } else {
-                if (type instanceof Array) { //warning checking all the element type in array
+                if (type instanceof Array) { //Checking all the element type in array 
                     if (_.contains(type, param.conformsTo())) {
                         ob[index].push(param);
                     } else {
@@ -257,7 +266,17 @@ function makeReference(ob, index, type, card) {
                     }
                 } else {                    
                     if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) { //|| _.contains(type, param.getInheritanceChain([])) //WARNING : Debugging Inheritance issue by Ava
-                        ob[index].push(param);
+                        //Check if the object is not already in reference collection<?
+                        if(_.contains(ob[index],param)) {
+                            console.log("Error trying to assign already assigned object: "+ param);   
+                            //maybe assigning it because of circular opposite relation
+                        } else {
+                            ob[index].push(param);
+                            if(opposite!=undefined) {
+                                var functionStr = 'set'+opposite;
+                                param[functionStr](ob); //WARNING IF PARAM IS NOT CURRENTLY DEFINED? -> push 2 times....
+                            }
+                        }
                     } else {
                         console.log(_.contains(param.conformsTo().getInheritanceChain([])),type);
                         console.log(param.conformsTo().getInheritanceChain([]))
@@ -274,9 +293,10 @@ Class.prototype.newInstance = function (name) {
     var result = {}; 
     var self = this;
 	
-    //create setter for attributes from superclass
+    //Get all the super types of the current instance
     var allsuperType = this.getInheritanceChain([]);
-
+    
+    //create setter for attributes from superclass
 	for(var i in allsuperType) {
 		refSuperType = allsuperType[i];
         for (var sup in refSuperType.__attributes) {
@@ -289,7 +309,8 @@ Class.prototype.newInstance = function (name) {
             result[sup] = [];
             var type = refSuperType.__references[sup].type;
             var card = refSuperType.__references[sup].card;
-            result["set" + sup] = makeReference(result, sup, type, card);
+            var opposite = refSuperType.__references[sup].opposite;
+            result["set" + sup] = makeReference(result, sup, type, card, opposite);
         }
 	}
 
@@ -309,7 +330,8 @@ Class.prototype.newInstance = function (name) {
         result[j] = [];
         var type = this.__references[j].type;
         var card = this.__references[j].card;
-        result["set" + j] = makeReference(result, j, type, card);
+        var opposite = this.__references[j].opposite;
+        result["set" + j] = makeReference(result, j, type, card, opposite);
     }
 
     // Assign the "type" to which M1 class is conform to.
