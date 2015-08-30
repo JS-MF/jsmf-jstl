@@ -31,6 +31,7 @@
  *      - Inheritance issue (see Ava Bug)
  */
 
+// if jsmf.set('db','neo4j') { load JSMFNeo4j.js module }; // how parameter it? ip address and port number?
 var modelDB = require('./JSMFNeo4j.js'); // not direclty requiering Neo4J-JSMF
 var _ = require('underscore');
 
