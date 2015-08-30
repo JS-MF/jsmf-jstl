@@ -268,13 +268,15 @@ function makeReference(ob, index, type, card, opposite) {
                     if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) { //|| _.contains(type, param.getInheritanceChain([])) //WARNING : Debugging Inheritance issue by Ava
                         //Check if the object is not already in reference collection<?
                         if(_.contains(ob[index],param)) {
-                            console.log("Error trying to assign already assigned object: "+ param);   
+                            console.log("Error trying to assign already assigned object of relation "+ index);   
                             //maybe assigning it because of circular opposite relation
                         } else {
-                            ob[index].push(param);
+                            ob[index].push(param); //ob[index]=param...
                             if(opposite!=undefined) {
                                 var functionStr = 'set'+opposite;
-                                param[functionStr](ob); //WARNING IF PARAM IS NOT CURRENTLY DEFINED? -> push 2 times....
+                                param[opposite].push(ob);
+                                //param[functionStr](ob); // using object function but consequently it is trying to push 2 times.... but have all the checks...
+                                //even for inheritance
                             }
                         }
                     } else {
