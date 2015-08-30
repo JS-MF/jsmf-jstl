@@ -18,7 +18,8 @@
     "xmldom": "~0.1.19",
     "xpath.js": "~1.0.5",
     "xpath": "~0.0.9",
-    "circular-json": "~0.1.6"
+    "circular-json": "~0.1.6",
+    "object-hash": "~0.9.1"
   },
   "devDependencies": {},
   "scripts": {
