@@ -129,21 +129,23 @@ describe('Create Class Elements', function() {
 			done();
 		})
 
-		it('Opposite (0..n) reference created - WARNING opposite not done YET', function(done){
+		it('Opposite (0..n) reference created', function(done){
 			var State = Class.newInstance('State');
 			var Transition = Class.newInstance('Transition');
-			State.setReference('transition', Transition,-1);
-            Transition.setReference('source', State, 1);
+			State.setReference('transition', Transition,-1, 'source');
+            Transition.setReference('source', State, 1, 'transition');
             
 			State.__references.should.not.be.empty
             State.__references.should.have.keys('transition');
 			State.__references['transition'].type.should.equal(Transition);
 			State.__references['transition'].should.have.property('card',-1);
+            State.__references['transition'].should.have.property('opposite','source');
             
             Transition.__references.should.not.be.empty
             Transition.__references.should.have.keys('source');
 			Transition.__references['source'].type.should.equal(State);
 			Transition.__references['source'].should.have.property('card',1);
+            Transition.__references['source'].should.have.property('opposite','transition');
             
 			done();
 		})
@@ -599,6 +601,66 @@ describe('Create Class Instances', function() {
 			done();
 		})
          
+        it('Instance created trying to assign multiple time the same model element (JS reference) to a reference', function(done){
+			var State = Class.newInstance('State');
+			var Transition = Class.newInstance('Transition');
+            Transition.setAttribute('name', String);
+            State.setReference('transition', Transition, -1);
+            
+            s1 = State.newInstance('s1');
+            s1.should.have.property('settransition');
+            s1.conformsTo().__references['transition'].type.should.equal(Transition);
+            s1.transition.should.be.empty;
+             
+            t1 = Transition.newInstance('t1');
+            t1.setname('transitionOne');
+                
+            s1.settransition(t1);
+            s1.transition.should.not.be.empty;
+            s1.should.have.property('transition',[t1]);
+            s1.transition[0].should.equal(t1);
+            s1.transition.length.should.equal(1);
+            
+            //Setting again t1 and checking that nothing has changed for s1.transition
+            s1.settransition(t1);
+            s1.should.have.property('transition',[t1]);
+            s1.transition[0].should.equal(t1);
+            s1.transition.length.should.equal(1); // the object has not been set two times
+            
+			done();
+		})
+        
+        it('Instance created assigning similar model element but a different instance to a reference', function(done){
+			var State = Class.newInstance('State');
+			var Transition = Class.newInstance('Transition');
+            Transition.setAttribute('name', String);
+            State.setReference('transition', Transition, -1);
+            
+            s1 = State.newInstance('s1');
+            s1.should.have.property('settransition');
+            s1.conformsTo().__references['transition'].type.should.equal(Transition);
+            s1.transition.should.be.empty;
+             
+            t1 = Transition.newInstance('t1');
+            t1.setname('transitionOne');
+            
+            t2 = Transition.newInstance('t1'); //keeping the same name ...
+            t2.setname('transitionOne'); //... and the same attributes
+        
+            s1.settransition(t1);
+            s1.transition.should.not.be.empty;
+            s1.should.have.property('transition',[t1]);
+            s1.transition[0].should.equal(t1);
+            s1.transition.length.should.equal(1);
+            
+            s1.settransition(t2);
+            s1.should.have.property('transition',[t1,t2]);
+            s1.transition[0].should.equal(t1);
+            s1.transition[1].should.equal(t2);
+            s1.transition.length.should.equal(2); // the object has not been set two times
+            
+			done();
+		})
         
          it('Instance Created with circular (non-opposite) References', function(done){
 			var State = Class.newInstance('State');
