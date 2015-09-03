@@ -6,8 +6,12 @@
  *
  *    Todo
  *      | Inheritance, Attributes and references overloading: Tested - Still missing For Reference inheritance
- *      - Get all the attribute of a given "Model"
+ *      - Get all the attribute of a given "Model" (JSMF_Util)
+        - Get all the relation that leads to a given type (JSMF_Util)
+        - Get element from reference, iterate over elements easily (hide for-each?).
  *      - implement different level of checking (type) : different conformances-flexibility
+        - Exploit more the "model"
+        - A dummy instance creator (JSMT_Util);
  *      - Checking for type in references according to supertypes inheritance chain
  *      - Setting and Checking for types that are not JS primitive types (attributes)
  *      - Persistence and Loading using JSON
@@ -16,16 +20,17 @@
  *		- Add keyword "Any" for loose typing?
  *      - Dynamic of objects/instances/classes e.g., adding an attribute to the clas after instanciation will allow the object to set/get the new attribute.
  *           - also see conformance flexibility
+            - suggestion by Ava: build a event based approach
  *      - Permit the addition of new attribute/relation without behing an instance of a specific class
  *            - also see conformance flexibility
  *      - Add the inference/generalisation of instance attribute to class
- *      - Add a checking between Models and Metamodel (conformance).
- *      - Do the Opposite relation automatic building.
+ *      - Add a checking function between Models and Metamodel (conformance). (using JSTL?)
  *      | Build a fonction that get all Attribute and/or all reference from the inheritance chain. To be tested
  *      | Demotion/Promotion (see JSMF_Utils) --> to be enhanced thanks to model<->reference model associations
  *
  *  Done
  *      - Build a filter function that get all the element of a given type
+        - Do the Opposite relation automatic building.
  *
  *  Bug
  *      - Inheritance issue (see Ava Bug)
@@ -274,7 +279,7 @@ function makeReference(ob, index, type, card, opposite) {
                         } else {
                             ob[index].push(param); //ob[index]=param...
                             if(opposite!=undefined) {
-                                var functionStr = 'set'+opposite;
+                                //var functionStr = 'set'+opposite;
                                 param[opposite].push(ob);
                                 //param[functionStr](ob); // using object function but consequently it is trying to push 2 times.... but have all the checks...
                                 //even for inheritance
@@ -282,7 +287,7 @@ function makeReference(ob, index, type, card, opposite) {
                         }
                     } else {
                         console.log(_.contains(param.conformsTo().getInheritanceChain([])),type);
-                        console.log(param.conformsTo().getInheritanceChain([]))
+                        console.log(param.conformsTo().getInheritanceChain([])[0])
                         //ob[index].push(param); //WARNING DO the push if type 
                         console.log("assigning wrong type: " + param.conformsTo().__name + " to current reference." + " Type " + type.__name + " was expected");
                     }
@@ -313,7 +318,7 @@ Class.prototype.newInstance = function (name) {
             var type = refSuperType.__references[sup].type;
             var card = refSuperType.__references[sup].card;
             var opposite = refSuperType.__references[sup].opposite;
-            result["set" + sup] = makeReference(result, sup, type, card, opposite);
+            result["set" + sup] = makeReference(result, sup, type, card, opposite); //+ add threatment for composite
         }
 	}
 
@@ -334,7 +339,7 @@ Class.prototype.newInstance = function (name) {
         var type = this.__references[j].type;
         var card = this.__references[j].card;
         var opposite = this.__references[j].opposite;
-        result["set" + j] = makeReference(result, j, type, card, opposite);
+        result["set" + j] = makeReference(result, j, type, card, opposite); // add threatment for composite
     }
 
     // Assign the "type" to which M1 class is conform to.

@@ -26,6 +26,7 @@ function isFemale(member) {
 }
 
 //Give the FamilyName the Meta way
+/*
 function familyName(member) {
     var result = '';
     var keys = []; 
@@ -45,21 +46,24 @@ function familyName(member) {
     });
     return result;
 }
+*/
 
 function familyName(member) {
  var result = '' ;   
     if(member.familyFather[0] != undefined) {
-       member.familyFather[0].lastName;
+      result = member.familyFather[0].lastName;
     }
     if(member.familyMother.length!=0) {
-        member.familyMother[0].lastName;   
+       result = member.familyMother[0].lastName;   
     }
     if(member.familySon.length!=0) {
-        member.familySon[0].lastName;
+       result = member.familySon[0].lastName;
     }
      if(member.familyDaughter.length!=0) {
-        member.familyDaughter[0].lastName;
+       result = member.familyDaughter[0].lastName;
     }
+
+return result;
 }
 
 
@@ -91,7 +95,8 @@ var Member2FeMale = {
     },
     
     out : function(inp) { 
-        var d = MMO.Female.newInstance('');    
+        var d = MMO.Female.newInstance('');
+        console.log(familyName(inp));
         familyName(inp);
         d.setfullName(inp.firstName+' '+familyName(inp));                        
         return [d];                 
@@ -114,4 +119,4 @@ module.applyAllRules();
 
 inspect(Mo);
 
-Mo.save();
+//Mo.save();

@@ -15,6 +15,7 @@
 var JSMF = require('./JSMF_Prototype'); var Model = JSMF.Model; var Class = JSMF.Class;
 //var _ = require('underscore');
 var _ = require('lodash');
+var hash = require('object-hash');
 var inspect = require('eyes').inspector({
     maxLength: 9000
 });
@@ -48,7 +49,9 @@ TransformationModule.prototype.apply = function(rule) {
             if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
                 self.resolveRef.push(output[index]);
             } else { //is outputelement (i.e. has a metamodel)
-                self.resolver[JSON.stringify(id)]=output[index]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
+                var idHash = hash(id)
+                //JSON.stringify(id)
+                self.resolver[idHash]=output[index]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
                 self.outputModel.setModellingElement(output[index]); //set the reference to created model element to outputModel
             }
         });
@@ -66,8 +69,7 @@ TransformationModule.prototype.applyAllRules = function() {
        function(elem, index) {
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2,index2) {  
-                var target = self.resolver[JSON.stringify(elem2)]; // ... resolve the target of the relation in the output model!
-        
+                var target = self.resolver[hash(elem2)]; // ... resolve the target of the relation in the output model!
                 var referenceFunctionName = 'set'+elem.relationname;
                 elem.source[referenceFunctionName](target);
             }
