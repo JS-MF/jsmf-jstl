@@ -16,12 +16,12 @@ properties (attributes/references setters).
 
 # Installation
 
-##Installation of NodeJs
+## Installation of NodeJs
 This application can run in the browser. 
 But it is first intended to run on NodeJs available as:
 https://nodejs.org/en/ 
 
-##Installation of Test Environment
+## Installation of Test Environment
 The test framework used is Mocha:
 
     $ npm install -g mocha
@@ -30,9 +30,9 @@ It uses additionally the should library for testing purposes
 
     $ npm install should --save-dev
 
-#Features and Todo
+# Features and Todo
 
-##Specific Features:
+## Specific Features:
 JSMF, tough it is a simplification, proposes additional features such as:
 - different level of conformance and type checking, allowing for loosely-defined
 models (see Natural Modelling).
