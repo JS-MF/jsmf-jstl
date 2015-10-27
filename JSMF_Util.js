@@ -1,7 +1,7 @@
 var JSMF = require('./JSMF_Prototype');
 var Model = JSMF.Model;
 var Class = JSMF.Class;
-var _ = require('underscore');
+var _ = require('lodash');
 
 
 //Copy the element which are the same from sourceME to targetME without changing the metaclass of Source and Target elements

@@ -1,8 +1,10 @@
 /**
  *   JavaScript Modelling Framework (JSMF)
- *   Copyright 2014 © Henri Tudor
- * 	 Copyright 2015 © LIST
- *   Authors : J.S. Sottet, A Vagner
+ *
+©2015 Luxembourg Institute of Science and Technology All Rights Reserved
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Authors : J.S. Sottet, A Vagner
  *
  *    Todo
  *      | Inheritance, Attributes and references overloading: Tested - Still missing For Reference inheritance
@@ -38,7 +40,7 @@
 
 // if jsmf.set('db','neo4j') { load JSMFNeo4j.js module }; // how parameter it? ip address and port number?
 var modelDB = require('./JSMFNeo4j.js'); // not direclty requiering Neo4J-JSMF
-var _ = require('underscore');
+var _ = require('lodash');
 
 //DEF: Check Type Strict, Partial, None | Check Cardinality Strict, Partial, None, ...
 //Natural => Formal
@@ -93,6 +95,30 @@ Model.prototype.setModellingElements = function (ClassTab) {
         this.setModellingElement(ClassTab);
     }
 };
+
+//Another way to put modelling elements in model.
+Model.prototype.add = function (ClassTab) {
+    if (ClassTab instanceof Array) {
+        for (i in ClassTab) {
+            if (ClassTab[i].__name == undefined) { //i.e. not  a meta-element
+                var tab = [];
+     
+                tab = this.modellingElements[ClassTab[i].conformsTo().__name];
+                if (tab == undefined) {
+                    tab = [];
+                }
+                tab.push(ClassTab[i]);
+                this.modellingElements[ClassTab[i].conformsTo().__name] = tab;
+               // console.log('Conformsto: ', ClassTab[i].conformsTo().__name);
+            } else {
+                this.modellingElements[ClassTab[i].__name] = ClassTab[i];
+            }
+        }
+    } else {
+        console.error("Unable to set one element use Model.setModellingElements calling setModellingElement with only one element.");
+        this.setModellingElement(ClassTab);
+    }
+}
 
 //Send to JSMF Util?
 Model.prototype.getPersistedID = function (ModelElement) {
@@ -200,11 +226,12 @@ Class.prototype.conformsTo = function () {
 };
 
 //Relation nature: Composition: added +unprecised number of arguments key/value toset some addition info on the reference.
-Class.prototype.setReference = function (name, type, cardinality, opposite, composite) {
+Class.prototype.setReference = function (name, type, cardinality, opposite, composite, associated) {
     //check name?
     this.__references[name] = {
         "type": type, //should check the type?
-        "card": cardinality
+        "card": cardinality,
+        "associated":associated
     }
     //To be TESTED
     if (opposite !== undefined) {
@@ -215,6 +242,7 @@ Class.prototype.setReference = function (name, type, cardinality, opposite, comp
          var tmp = this.__references[name];
         tmp.composite = composite;
     }
+    
 };
 
 /******************************
@@ -253,15 +281,19 @@ function makeAssignation(ob, index, attype) {
     };
 }
 
-// Adding the creaiton of opposite except for ARRAY of Type
-function makeReference(ob, index, type, card, opposite) {
-    return function (param) {
-        //CheckCardinalities
+// Adding the creation of opposite except for ARRAY of Type
+function makeReference(ob, index, type, card, opposite, composite,associated) {
+    //ob[index].ref=[];
+    
+    ob.associated=[];
+    return function (param,associated) {
+        //CheckCardinalitie
         var elementsinrelation = ob[index].length;
+        ob.associated.push({"ref":index, "elem":elementsinrelation, "associated":associated});
         if (card == 1 && elementsinrelation >= 1) {
             console.log("error trying to assign multiple elements to a single reference");
         } else {
-            if (type === Class) { // <=> bypasscheckType, equivalent to any
+            if (type === Class) { // <=> bypasscheckType, equivalent to oclAny
                 ob[index].push(param);
             } else {
                 if (type instanceof Array) { //Checking all the element type in array 
@@ -271,7 +303,8 @@ function makeReference(ob, index, type, card, opposite) {
                         console.log("assigning wrong type: " + param.conformsTo().__name + " Expecting types in " + type);
                     }
                 } else {                    
-                    if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) { //|| _.contains(type, param.getInheritanceChain([])) //WARNING : Debugging Inheritance issue by Ava
+                    if (type == param.conformsTo() || _.contains(type,param.conformsTo().getInheritanceChain([]))) {
+                        //|| _.contains(type, param.getInheritanceChain([])) //WARNING : Debugging Inheritance issue by Ava
                         //Check if the object is not already in reference collection<?
                         if(_.contains(ob[index],param)) {
                             console.log("Error trying to assign already assigned object of relation "+ index);   
@@ -281,8 +314,8 @@ function makeReference(ob, index, type, card, opposite) {
                             if(opposite!=undefined) {
                                 //var functionStr = 'set'+opposite;
                                 param[opposite].push(ob);
-                                //param[functionStr](ob); // using object function but consequently it is trying to push 2 times.... but have all the checks...
-                                //even for inheritance
+                                //param[functionStr](ob); // using object function but consequently it is trying to push 2 times but have all the checks...
+                                //even for inheritance?
                             }
                         }
                     } else {
@@ -318,7 +351,9 @@ Class.prototype.newInstance = function (name) {
             var type = refSuperType.__references[sup].type;
             var card = refSuperType.__references[sup].card;
             var opposite = refSuperType.__references[sup].opposite;
-            result["set" + sup] = makeReference(result, sup, type, card, opposite); //+ add threatment for composite
+            var composite = refSuperType.__references[sup].composite;
+            var associated = refSuperType.__references[sup].associated;
+            result["set" + sup] = makeReference(result, sup, type, card, opposite, composite,associated); //+ add threatment for composite
         }
 	}
 
@@ -339,7 +374,9 @@ Class.prototype.newInstance = function (name) {
         var type = this.__references[j].type;
         var card = this.__references[j].card;
         var opposite = this.__references[j].opposite;
-        result["set" + j] = makeReference(result, j, type, card, opposite); // add threatment for composite
+        var composite = this.__references[j].composite;
+        var associated = this.__references[j].associated;
+        result["set" + j] = makeReference(result, j, type, card, opposite, composite,associated); // add threatment for composite
     }
 
     // Assign the "type" to which M1 class is conform to.
@@ -349,6 +386,9 @@ Class.prototype.newInstance = function (name) {
 
     return result;
 };
+
+
+
 
 //Export three main framework functions
 module.exports = {

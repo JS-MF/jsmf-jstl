@@ -1,3 +1,12 @@
+/**
+ *   Neo4J Connector
+ *
+©2015 Luxembourg Institute of Science and Technology All Rights Reserved
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Authors : J.S. Sottet
+*/
+
 /* **************************************
 TODO:
     - add logger
@@ -8,6 +17,7 @@ TODO:
 var serverURL = "http://localhost:7474";
 var neo4j = require('node-neo4j');
 var async = require("async");
+var _ = require("lodash");
 db = new neo4j(serverURL);
 var inspect = require('eyes').inspector({maxLength: 9000});
 
@@ -132,15 +142,15 @@ function saveModel(Model) {
 		  }
         
         var labelMetaClass = element.conformsTo().__name;
-        var labelModelName = element.conformsTo().__name;
+        var labelModelName = Model.__name;
         
         //WARNING We are in presence of undefined metaelement OR a metaclass
         if(labelMetaClass==undefined) {      
             labelMetaClass = Model.__name+"_Class_Undefined";
         }
-       console.log('object to push',pushObject);
+       //add test if pushObject == ?
 		db.insertNode(pushObject , 
-			[labelMetaClass,labelModelName,Model.__name], //Add Model.__name as label to the object (Utility of labelModelName?)
+			[labelMetaClass,Model.__name], //Add Model.__name as label to the object (Utility of labelModelName?)
 			function(err, result) {
 				if(err) {
 					throw err;
@@ -283,7 +293,11 @@ function createReferencesCVERSION(ModelElement, callback5) {
 
     var labelMetaClass = ModelElement.conformsTo().__name;
     var pushObject = {};
-        
+    
+    var associatedObjectValues = ModelElement.associated;
+    
+    console.log(associatedObjectValues);
+    
     for(i in ModelElement.conformsTo().__attributes) {
         pushObject[i] = ModelElement[i];
     }
@@ -292,8 +306,8 @@ function createReferencesCVERSION(ModelElement, callback5) {
 			currentRelationElement = ModelElement[i];
 			relationLabel = i;
 			for(relIt in currentRelationElement) {
-				//console.log(i, currentRelationElement[relIt]); 
-				targetElements.push({label: relationLabel, el :currentRelationElement[relIt]});
+				//console.log('TOTO',relIt, currentRelationElement[relIt]); 
+				targetElements.push({label: relationLabel, el :currentRelationElement[relIt], id: relIt});
 			}
 	}
 	
@@ -304,8 +318,8 @@ function createReferencesCVERSION(ModelElement, callback5) {
 	[ function(callback1) {
 		// Get Source ID if references...
 //debug 
-        //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
-		db.readNodesWithLabelsAndProperties (labelMetaClass, pushObject, function (err, result) {	
+        //console.log('ELEM', labelMetaClass,pushObject);
+		db.readNodesWithLabelsAndProperties(labelMetaClass, pushObject, function (err, result) {	
 			if(result!=undefined){
                 if(result.lenght!=0) {
 				    //Always return the first value (oldest node)
@@ -317,15 +331,15 @@ function createReferencesCVERSION(ModelElement, callback5) {
 	},	function(callback3) {
 				async.eachSeries(targetElements, function(element,callback2) {
 				    var pushObject = {};
+                    //console.log('TOTO',element);
                     var labelMetaClass = element.el.conformsTo().__name;
 					for(j in element.el.conformsTo().__attributes) {
                         pushObject[j] = element.el[j];
-                    }
-					
-//debug //console.log(' TARGET! MATCH (n:'+queryTargetType+') WHERE '+queryTarget+' RETURN n');
+                    }			
+//debug 
 					db.readNodesWithLabelsAndProperties(labelMetaClass,pushObject, function (err, result) {	
 						if(result.length!=0) {
-							idTargets.push({label: element.label, el:result[0]._id});
+							idTargets.push({label: element.label, el:result[0]._id, id:element.id});
 							//idTarget = result[0]._id;
 						} else {console.log("Error object not found in Database");}
 							callback2();
@@ -342,7 +356,9 @@ function createReferencesCVERSION(ModelElement, callback5) {
 		//console.log(idTargets);	
 		async.eachSeries(idTargets, function(relation, callback6) {
 //DEbug //console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
-			 db.insertRelationship(idSource,relation.el, relation.label,{}, function(err, result){ // let see if transition should support some properties... 
+                objectAssociation = _.select(ModelElement.associated, {ref:relation.label})[relation.id].associated;
+               // for( iteration in 
+			 db.insertRelationship(idSource,relation.el, relation.label,objectAssociation, function(err, result){ // let see if transition should support some properties... 
 				if(err) {
 					throw err;
 				} else {

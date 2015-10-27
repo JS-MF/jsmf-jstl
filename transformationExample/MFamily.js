@@ -60,7 +60,7 @@ DaughterS.setfamilyDaughter(familySailor);
 ma.setModellingElements([familyMarch,fatherM,motherM,sonM,daughterM,familySailor,FatherS,MotherS,SonS1,SonS2,DaughterS]);
 
 //ma.setModellingElements([familyMarch,familySailor]);
-
+ma.save();
 
 module.exports = {  
     ma : ma

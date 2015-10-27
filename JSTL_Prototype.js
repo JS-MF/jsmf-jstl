@@ -1,8 +1,12 @@
-/*
-*  JSTL _ Javascript Transformation Language for JSMF
-*   Copyright 2015 ©  LIST - Luxembourg Institute of Science and Technology
-*   Author : JS Sottet
-*   Contributors :  A Vagner, A Garcia Frey
+/**
+ *   JavaScript Modelling Framework (JSMF)
+ *
+©2015 Luxembourg Institute of Science and Technology All Rights Reserved
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Authors : J.S. Sottet, A Vagner
+Contributors: G. Garcia-Frey
+
 * ideas to be implemented : could extend JSMF model and class in order to support specific operation (such as filter on Class)
 *                           could show transformation execution step by step, construct a model, etc.
 *   todo : 
