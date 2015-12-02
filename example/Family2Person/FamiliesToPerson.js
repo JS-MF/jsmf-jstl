@@ -7,7 +7,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : J.S. Sottet
  */
 
-var JSTL = require('../index.js'); var TransformationModule= JSTL.TransformationModule;
+var JSTL = require('../../index.js'); var TransformationModule= JSTL.TransformationModule;
 var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
 
 //Load the metamodels (in one file for the example)
@@ -89,7 +89,7 @@ var Member2Male = {
 
     out : function(inp) {
         var d = MMO.Male.newInstance('');
-        d.setfullName(inp.firstName+' '+familyName(inp));
+        d.setFullName(inp.firstName+' '+familyName(inp));
         return [d];
     }
 }
@@ -107,7 +107,7 @@ var Member2FeMale = {
         var d = MMO.Female.newInstance('');
         console.log(familyName(inp));
         familyName(inp);
-        d.setfullName(inp.firstName+' '+familyName(inp));
+        d.setFullName(inp.firstName+' '+familyName(inp));
         return [d];
     }
 }
@@ -127,5 +127,3 @@ module.addRule(Member2FeMale);
 module.applyAllRules();
 
 inspect(Mo);
-
-Mo.save();

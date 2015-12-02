@@ -75,7 +75,8 @@ TransformationModule.prototype.applyAllRules = function() {
             function(elem2,index2) {
                 var target = self.resolver[hash(elem2)]; // ... resolve the target of the relation in the output model!
                 var relationName = elem.relationname;
-                var referenceFunctionName = 'set' + relationName[0].toUppercase() + relationName.slice(1);
+                console.log(relationName);
+                var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
                 elem.source[referenceFunctionName](target);
             }
         );

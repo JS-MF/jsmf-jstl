@@ -1,4 +1,4 @@
-jsmf JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class; var Enum = JSMF.Enum;
+var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class; var Enum = JSMF.Enum;
 
 var mmb = new Model('Person');
 

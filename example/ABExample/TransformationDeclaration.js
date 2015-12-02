@@ -1,5 +1,5 @@
-var JSTL = require('../index.js'); var TransformationModule= JSTL.TransformationModule;
-var JSMF = require('../jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
+var JSTL = require('../../index.js'); var TransformationModule= JSTL.TransformationModule;
+var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
 
 //Load the metamodels (in one file for the example)
 var MM = require('./MMABExamples.js'); //var A = MM.A; //for defining quick access to metamodel elements
@@ -36,7 +36,7 @@ var trule2 = {                                      //ATL <=> rule trule2 {
 
     out : function(inp) {
         var d = MM.D.newInstance('transformed');    //ATL<~>d: MM!D (
-        d.setnum(inp.id);                           // ATL <=> num <- inp.id
+        d.setNum(inp.id);                           // ATL <=> num <- inp.id
         return [d];
     }
 }
@@ -53,7 +53,7 @@ var transformation1  = { //ATL <=> rule transformation1 {
 
     out : function(inp) {                           //ATL <=> to (withtout any ref to output elements)
             var b = MM.B.newInstance('');           // <=> o : MM!B //here we call newInstance explicitly.. should be hidden
-            b.setnameB(inp.name+'_transfo');        //ATL <=> nameB <= inp.name+'transfo'
+            b.setNameB(inp.name+'_transfo');        //ATL <=> nameB <= inp.name+'transfo'
             relation = {
                 source : b,
                 relationname : 'toD',
@@ -80,6 +80,3 @@ module.applyAllRules();
 
 inspect(M.mb);
 //(_(M.mb.Filter(MM.B)).first());
-
-//Persiste Model in DB (using the Neo4J connector
-M.mb.save();

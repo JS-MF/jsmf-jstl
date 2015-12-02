@@ -6,61 +6,60 @@ var inspect = require('eyes').inspector({
 
 var ma = new Model('a');
 var familyMarch = MM.Family.newInstance('march');
-familyMarch.setlastName('March');
+familyMarch.setLastName('March');
 
 var fatherM = MM.Member.newInstance('Jim');
-fatherM.setfirstName('Jim');
+fatherM.setFirstName('Jim');
 var motherM = MM.Member.newInstance('Cindy');
-motherM.setfirstName('Cindy');
+motherM.setFirstName('Cindy');
 var sonM = MM.Member.newInstance('Brandon');
-sonM.setfirstName('Brandon');
+sonM.setFirstName('Brandon');
 var daughterM = MM.Member.newInstance('Brenda');
-daughterM.setfirstName('Brenda');
+daughterM.setFirstName('Brenda');
 
 //Should be resolved later with opposite!!!!!!!
-//familyMarch.setfather(fatherM);
-fatherM.setfamilyFather(familyMarch);
+//familyMarch.setFather(fatherM);
+fatherM.setFamilyFather(familyMarch);
 //familyMarch.setmother(motherM);
-motherM.setfamilyMother(familyMarch);
+motherM.setFamilyMother(familyMarch);
 //familyMarch.setsons(sonM);
-sonM.setfamilySon(familyMarch);
+sonM.setFamilySon(familyMarch);
 //familyMarch.setdaughters(daughterM);
-daughterM.setfamilyDaughter(familyMarch);
+daughterM.setFamilyDaughter(familyMarch);
 
 var familySailor = MM.Family.newInstance('Sailor');
-familySailor.setlastName('Sailor');
+familySailor.setLastName('Sailor');
 
 var FatherS = MM.Member.newInstance('Peter');
-FatherS.setfirstName('Peter');
+FatherS.setFirstName('Peter');
 
 var MotherS = MM.Member.newInstance('Jackie');
-MotherS.setfirstName('Jackie');
+MotherS.setFirstName('Jackie');
 
 var SonS1 = MM.Member.newInstance('David');
-SonS1.setfirstName('David');
+SonS1.setFirstName('David');
 
 var SonS2 = MM.Member.newInstance('Dylan');
-SonS2.setfirstName('Dylan');
+SonS2.setFirstName('Dylan');
 
 var DaughterS = MM.Member.newInstance('Kelly');
-DaughterS.setfirstName('Kelly');
+DaughterS.setFirstName('Kelly');
 
-//familySailor.setfather(FatherS);
-FatherS.setfamilyFather(familySailor);
+//familySailor.setFather(FatherS);
+FatherS.setFamilyFather(familySailor);
 //familySailor.setmother(MotherS);
-MotherS.setfamilyMother(familySailor);
+MotherS.setFamilyMother(familySailor);
 //familySailor.setsons(SonS1);
-SonS1.setfamilySon(familySailor);
+SonS1.setFamilySon(familySailor);
 //familySailor.setsons(SonS2);
-SonS2.setfamilySon(familySailor);
+SonS2.setFamilySon(familySailor);
 //familySailor.setdaughters(DaughterS);
-DaughterS.setfamilyDaughter(familySailor);
+DaughterS.setFamilyDaughter(familySailor);
 
 //ma.setReferenceModel(MM.mma);
 ma.setModellingElements([familyMarch,fatherM,motherM,sonM,daughterM,familySailor,FatherS,MotherS,SonS1,SonS2,DaughterS]);
 
 //ma.setModellingElements([familyMarch,familySailor]);
-ma.save();
 
 module.exports = {
     ma : ma
