@@ -25,10 +25,11 @@
   "dependencies": {
     "lodash": "~3.10.1",
     "object-hash": "~0.9.2",
-    "eyes": "~0.1.8",
     "jsmf": "git+ssh://git@git.list.lu:model/jsmf.git"
   },
   "devDependencies": {
-    "should": "~7.1.1"
+    "should": "~7.1.1",
+    "eyes": "~0.1.8",
+    "jsmf-magellan": "git+ssh://git@git.list.lu:model/jsmf-magellan.git"
   }
 }

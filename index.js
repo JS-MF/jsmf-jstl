@@ -20,9 +20,6 @@ var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
 //var _ = require('underscore');
 var _ = require('lodash');
 var hash = require('object-hash');
-var inspect = require('eyes').inspector({
-    maxLength: 9000
-});
 
 function TransformationModule(name, inputModel, outputModel) {
     this.name = name;
@@ -49,14 +46,16 @@ TransformationModule.prototype.apply = function(rule) {
     _.each(i, function(id,index){
         var output = rule.out(id);
 
-        _.each(output, function(idx,index) {
+        _.each(output, function(idx) {
             if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
-                self.resolveRef.push(output[index]);
+                self.resolveRef.push(idx);
             } else { //is outputelement (i.e. has a metamodel)
-                var idHash = hash(id)
-                //JSON.stringify(id)
-                self.resolver[idHash]=output[index]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
-                self.outputModel.setModellingElement(output[index]); //set the reference to created model element to outputModel
+                var idHash = hash(id);
+                if (!(_.has(self.resolver, idHash))) {
+                   self.resolver[idHash] = [];
+                }
+                self.resolver[idHash].push(idx);
+                self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
             }
         });
 
@@ -68,19 +67,29 @@ TransformationModule.prototype.applyAllRules = function() {
     _.each(self.rules, function(elem,index) {
             self.apply(elem);
     });
-    //inspect(self.resolveRef);
     _.each(self.resolveRef,
        function(elem, index) {
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
-            function(elem2,index2) {
-                var target = self.resolver[hash(elem2)]; // ... resolve the target of the relation in the output model!
-                var relationName = elem.relationname;
-                console.log(relationName);
-                var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
-                elem.source[referenceFunctionName](target);
+            function(elem2) {
+                var idHash = hash(elem2);
+                _.each(self.resolver[idHash], function(target) {
+                    // check target type??
+                    var relationName = elem.relationname;
+                    relationType = elem.source.conformsTo().getAllReferences()[relationName].type;
+                    if (hasClass(target, relationType)) {
+                        var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
+                        elem.source[referenceFunctionName](target);
+                    }
+                });
             }
         );
     });
+}
+
+var hasClass = function (x, type) {
+    var types = type instanceof Array ? type : [type];
+    return _.some(x.conformsTo().getInheritanceChain(),
+                  function (c) {return _.includes(types, c)});
 }
 
 
