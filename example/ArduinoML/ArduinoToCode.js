@@ -92,6 +92,7 @@ module.addRule({
     out: function(i) {
         var b = MMO.BehaviouralConcerns.newInstance();
         b.setTimeConfig(MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200}));
+        // module.affect(b, 'stateFunction', i.State);
         var bStateFunction = {
             source: b,
             relationname: 'stateFunction',

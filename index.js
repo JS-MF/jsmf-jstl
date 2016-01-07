@@ -5,7 +5,7 @@
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Authors : J.S. Sottet, A Vagner
-Contributors: G. Garcia-Frey
+Contributors: G. Garcia-Frey, N. Biri
 
 * ideas to be implemented : could extend JSMF model and class in order to support specific operation (such as filter on Class)
 *                           could show transformation execution step by step, construct a model, etc.
@@ -41,24 +41,21 @@ TransformationModule.prototype.apply = function(rule) {
 
     //WARNING the input model is fixed and should be specified by the rule or for each rules (i.e., multiple input models).
     var i = rule.in(this.inputModel);
-
+    //
     //process output model elements
     _.each(i, function(id,index){
-        var output = rule.out(id);
+        var output = rule.out(id, self.inputModel);
 
-        _.each(output, function(idx) {
-            if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
-                self.resolveRef.push(idx);
-            } else { //is outputelement (i.e. has a metamodel)
-                var idHash = hash(id);
-                if (!(_.has(self.resolver, idHash))) {
-                   self.resolver[idHash] = [];
-                }
-                self.resolver[idHash].push(idx);
-                self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
-            }
+        var partOutput = _.partition(output, function(idx) { return idx.conformsTo == undefined ;});
+        self.resolveRef.concat(partOutput[0]);
+        var idHash = hash(id);
+        if (!(_.has(self.resolver, idHash))) {
+           self.resolver[idHash] = [];
+        }
+        _.forEach(partOutput[1], function(idx) {
+            self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
         });
-
+        self.resolver[idHash] = self.resolver[idHash].concat(partOutput[1]);
     });
 }
 
@@ -69,15 +66,15 @@ TransformationModule.prototype.applyAllRules = function() {
     });
     _.each(self.resolveRef,
        function(elem, index) {
+        var relationName = elem.relationname;
+        relationType = elem.source.conformsTo().getAllReferences()[relationName].type;
+        var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2) {
                 var idHash = hash(elem2);
                 _.each(self.resolver[idHash], function(target) {
                     // check target type??
-                    var relationName = elem.relationname;
-                    relationType = elem.source.conformsTo().getAllReferences()[relationName].type;
                     if (hasClass(target, relationType)) {
-                        var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
                         elem.source[referenceFunctionName](target);
                     }
                 });
@@ -92,9 +89,8 @@ var hasClass = function (x, type) {
                   function (c) {return _.includes(types, c)});
 }
 
-
 module.exports = {
 
-    TransformationModule: TransformationModule,
+    TransformationModule: TransformationModule
 
 };
