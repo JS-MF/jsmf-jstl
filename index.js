@@ -19,7 +19,6 @@ Contributors: G. Garcia-Frey, N. Biri
 var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
 //var _ = require('underscore');
 var _ = require('lodash');
-var hash = require('object-hash');
 
 function TransformationModule(name, inputModel, outputModel) {
     this.name = name;
@@ -28,7 +27,7 @@ function TransformationModule(name, inputModel, outputModel) {
     this.rules = [];
 
     this.resolveRef = [];
-    this.resolver =  {};
+    this.resolver = [];
 }
 
 TransformationModule.prototype.addRule = function(rule) {
@@ -47,15 +46,16 @@ TransformationModule.prototype.apply = function(rule) {
         var output = rule.out(id, self.inputModel);
 
         var partOutput = _.partition(output, function(idx) { return idx.conformsTo == undefined ;});
-        self.resolveRef.concat(partOutput[0]);
-        var idHash = hash(id);
-        if (!(_.has(self.resolver, idHash))) {
-           self.resolver[idHash] = [];
+        self.resolveRef = self.resolveRef.concat(partOutput[0]);
+        var resolverEntry = _.find(self.resolver, function(x) {return x.key === id});
+        if (resolverEntry === undefined) {
+           resolverEntry = {key: id, value: []};
+           self.resolver.push(resolverEntry);
         }
         _.forEach(partOutput[1], function(idx) {
             self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
         });
-        self.resolver[idHash] = self.resolver[idHash].concat(partOutput[1]);
+        resolverEntry.value = resolverEntry.value.concat(partOutput[1]);
     });
 }
 
@@ -71,8 +71,8 @@ TransformationModule.prototype.applyAllRules = function() {
         var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2) {
-                var idHash = hash(elem2);
-                _.each(self.resolver[idHash], function(target) {
+                var resolverEntry = _.find(self.resolver, function(x) {return x.key === elem2}) || {key: elem2, value: []};
+                _.each(resolverEntry.value, function(target) {
                     // check target type??
                     if (hasClass(target, relationType)) {
                         elem.source[referenceFunctionName](target);
