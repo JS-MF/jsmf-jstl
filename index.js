@@ -27,7 +27,7 @@ function TransformationModule(name, inputModel, outputModel) {
     this.rules = [];
 
     this.resolveRef = [];
-    this.resolver = [];
+    this.resolver = {};
 }
 
 TransformationModule.prototype.addRule = function(rule) {
@@ -47,10 +47,13 @@ TransformationModule.prototype.apply = function(rule) {
 
         var partOutput = _.partition(output, function(idx) { return idx.conformsTo == undefined ;});
         self.resolveRef = self.resolveRef.concat(partOutput[0]);
-        var resolverEntry = _.find(self.resolver, function(x) {return x.key === id});
+        if (self.resolver[id.__jsmfId] === undefined) {
+            self.resolver[id.__jsmfId] = [];
+        }
+        var resolverEntry = _.find(self.resolver[id.__jsmfId], function(x) {return x.key === id});
         if (resolverEntry === undefined) {
            resolverEntry = {key: id, value: []};
-           self.resolver.push(resolverEntry);
+           self.resolver[id.__jsmfId].push(resolverEntry);
         }
         _.forEach(partOutput[1], function(idx) {
             self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
@@ -71,7 +74,7 @@ TransformationModule.prototype.applyAllRules = function() {
         var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2) {
-                var resolverEntry = _.find(self.resolver, function(x) {return x.key === elem2}) || {key: elem2, value: []};
+                var resolverEntry = _.find(self.resolver[elem2._jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
                 _.each(resolverEntry.value, function(target) {
                     // check target type??
                     if (hasClass(target, relationType)) {
