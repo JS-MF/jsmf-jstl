@@ -7,15 +7,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : J.S. Sottet
  */
 
-var JSTL = require('../../index.js'); var TransformationModule= JSTL.TransformationModule;
-var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
+var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
+var JSMF = require('jsmf-core'); var Model = JSMF.Model;
 
 //Load the metamodels (in one file for the example)
-var MMI = require('./MMFamily.js');
-var MMO = require('./MMPerson.js');
+var MMI = require('./MMFamily');
+var MMO = require('./MMPerson');
 
 //Load the model (in one file for the example)
-var Mi = require('./MFamily.js');
+var Mi = require('./MFamily');
 
 //Create the outputModel
 var Mo = new Model('Out');

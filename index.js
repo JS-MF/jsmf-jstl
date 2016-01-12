@@ -7,17 +7,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : J.S. Sottet, A Vagner
 Contributors: G. Garcia-Frey, N. Biri
 
-* ideas to be implemented : could extend JSMF model and class in order to support specific operation (such as filter on Class)
-*                           could show transformation execution step by step, construct a model, etc.
+* ideas to be implemented : could show transformation execution step by step, construct a model, etc.
 *   todo :
             - Rule extension (inheritance)
             - Multiple input/output models
             - Hide the complex object for input
-            - Make a version that hide the "new Instance" - i.e., remove the require JSMF
 */
 
-var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
-//var _ = require('underscore');
 var _ = require('lodash');
 
 function TransformationModule(name, inputModel, outputModel) {
@@ -74,7 +70,7 @@ TransformationModule.prototype.applyAllRules = function() {
         var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2) {
-                var resolverEntry = _.find(self.resolver[elem2._jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
+                var resolverEntry = _.find(self.resolver[elem2.__jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
                 _.each(resolverEntry.value, function(target) {
                     // check target type??
                     if (hasClass(target, relationType)) {

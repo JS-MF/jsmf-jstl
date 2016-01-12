@@ -4,7 +4,7 @@ var Class;
 var Model;
 var Enum;
 
-(function() {var JSMF = require('jsmf');
+(function() {var JSMF = require('jsmf-core');
     Model = JSMF.Model;
     Class = JSMF.Class;
     Enum = JSMF.Enum;

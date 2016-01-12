@@ -10,28 +10,28 @@ Authors : Nicolas Biri
 'use strict';
 
 // model imports
-var JSTL = require('../../index.js'); var TransformationModule= JSTL.TransformationModule;
+var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
 var NAV = require('jsmf-magellan');
-var Model = require('jsmf').Model;
+var Model = require('jsmf-core').Model;
 
 // other imports
 var _ = require('lodash');
 var inspect = require('eyes').inspector({
-    maxLength: 9000
+    maxLength: 50000
 });
 
 // Metamodels
-var MMI = require('./MMArduinoML.js');
-var MMO = require('./MMAbstractCode.js');
+var MMI = require('./MMArduinoML');
+var MMO = require('./MMAbstractCode');
 
 // input file
-var input = require('./MArduinoML.js').switchExample;
+var input = require('./MArduinoML').switchExample;
 var output = new Model('Out');
 
 var module = new TransformationModule('arduinoToCode', input, output);
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.App),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var app = MMO.App.newInstance();
         var appStructural = {
@@ -49,7 +49,7 @@ module.addRule({
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.App),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var s = MMO.StructuralConcerns.newInstance();
         var sBrickAliases = {
@@ -67,28 +67,28 @@ module.addRule({
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.Brick),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.Brick, x)},
     out: function(i) {
         return [MMO.BrickAlias.newInstance({name: i.name, pin: i.pin})];
     }
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.Sensor),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.Sensor, x)},
     out: function(i) {
         return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.INPUT})];
     }
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.Actuator),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.Actuator, x)},
     out: function(i) {
         return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.OUTPUT})];
     }
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.App),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var b = MMO.BehaviouralConcerns.newInstance();
         b.setTimeConfig(MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200}));
@@ -108,7 +108,7 @@ module.addRule({
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.State),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.State, x)},
     out: function(i) {
         var t = i.transition[0];
         var s = MMO.StateFunction.newInstance({
@@ -126,7 +126,7 @@ module.addRule({
 });
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.State),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.State, x)},
     out: function(i) {
         return [MMO.MainLoop.newInstance({
             init: i.name
@@ -136,7 +136,7 @@ module.addRule({
 
 
 module.addRule({
-    in: _.curry(NAV.allInstancesFromModel)(MMI.Action),
+    in: function(x) { return NAV.allInstancesFromModel(MMI.Action, x)},
     out: function(i) {
         return [MMO.Write.newInstance({
             on: i.actuator[0].pin,
@@ -149,5 +149,4 @@ module.addRule({
 // launch transformation
 module.applyAllRules();
 
-//inspect(NAV.allInstancesFromModel(MMO.App,output)[0]);
 _.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(MMO.App.toCode(x))});

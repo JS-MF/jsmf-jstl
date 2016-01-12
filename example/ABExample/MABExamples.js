@@ -1,5 +1,5 @@
-var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
-var MM = require('./MMABExamples.js'); var A = MM.A; var B = MM.B; var C = MM.C; var D = MM.D;
+var JSMF = require('jsmf-core'); var Model = JSMF.Model; var Class = JSMF.Class;
+var MM = require('./MMABExamples'); var A = MM.A; var B = MM.B; var C = MM.C; var D = MM.D;
 var inspect = require('eyes').inspector({
     maxLength: 9000
 });

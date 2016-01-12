@@ -1,13 +1,11 @@
 'use strict';
-var AML = require('./MMArduinoML.js')
+var AML = require('./MMArduinoML')
 
-var Class;
 var Model;
 
 (function() {
-    var JSMF = require('jsmf');
+    var JSMF = require('jsmf-core');
     Model = JSMF.Model;
-    Class = JSMF.Class;
 }).call();
 
 var switchExample = new Model('Switch!');

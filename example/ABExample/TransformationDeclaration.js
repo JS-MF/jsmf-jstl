@@ -1,11 +1,11 @@
-var JSTL = require('../../index.js'); var TransformationModule= JSTL.TransformationModule;
-var JSMF = require('jsmf'); var Model = JSMF.Model; var Class = JSMF.Class;
+var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
+var JSMF = require('jsmf-core'); var Model = JSMF.Model; var Class = JSMF.Class;
 
 //Load the metamodels (in one file for the example)
-var MM = require('./MMABExamples.js'); //var A = MM.A; //for defining quick access to metamodel elements
+var MM = require('./MMABExamples'); //var A = MM.A; //for defining quick access to metamodel elements
 
 //Load the model (in one file for the example)
-var M = require('./MABExamples.js');
+var M = require('./MABExamples');
 var inspect = require('eyes').inspector({
     maxLength: 9000
 });
