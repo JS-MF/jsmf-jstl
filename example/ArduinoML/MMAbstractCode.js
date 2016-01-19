@@ -63,7 +63,9 @@ App.toCode = function(app) {
 StructuralConcerns.toCode = function(x) {
     return _.map(x.alias, _.curry(BrickAlias.toCode)).join('\n')
       + '\n\n'
-      + _.map(x.pinMode, _.curry(PinMode.toCode)).join('\n');
+      + 'void setup() {\n'
+      + _.map(x.pinMode, _.curry(PinMode.toCode)).join('\n')
+      + '\n}';
 }
 
 BrickAlias.toCode = function(x) {
@@ -71,7 +73,7 @@ BrickAlias.toCode = function(x) {
 }
 
 PinMode.toCode = function(x) {
-    return 'pinMode(' + x.name + ', ' + IO.resolve(x.mode) + ');';
+    return '  pinMode(' + x.name + ', ' + IO.resolve(x.mode) + ');';
 }
 
 BehaviouralConcerns.toCode = function(x) {
@@ -89,9 +91,9 @@ TimeConfig.toCode = function(x) {
 StateFunction.toCode = function(x) {
     return 'void state_' + x.name + '() {\n'
       + _.map(x.write, _.curry(Write.toCode)).join('\n\n')
-      + '  boolean guard = millis() - time > debounce\n'
-      + '  if digitalRead(' + x.readOn + ') == ' + Signal.resolve(x.read) + '&& guard) {\n'
-      + '    time = millis; state_' + x.next + '();\n'
+      + '  boolean guard = millis() - time > debounce;\n'
+      + '  if (digitalRead(' + x.readOn + ') == ' + Signal.resolve(x.read) + '&& guard) {\n'
+      + '    time = millis(); state_' + x.next + '();\n'
       + '  } else {\n'
       + '    state_' + x.name + '();\n'
       + '  }\n'

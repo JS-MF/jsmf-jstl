@@ -10,7 +10,8 @@ Authors : Nicolas Biri
 'use strict';
 
 // model imports
-var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
+var JSTL = require('../../index');
+var TransformationModule= JSTL.TransformationModule;
 var NAV = require('jsmf-magellan');
 var Model = require('jsmf-core').Model;
 
@@ -113,6 +114,7 @@ module.addRule({
         var t = i.transition[0];
         var s = MMO.StateFunction.newInstance({
             name: i.name,
+            next: t.next[0].name,
             readOn: t.sensor[0].pin,
             read: t.value
         });
