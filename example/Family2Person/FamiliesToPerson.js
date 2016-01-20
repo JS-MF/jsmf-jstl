@@ -7,7 +7,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : J.S. Sottet
  */
 
-var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
+var JSTL = require('../../index'); var Transformation = JSTL.Transformation;
 var JSMF = require('jsmf-core'); var Model = JSMF.Model;
 
 //Load the metamodels (in one file for the example)
@@ -113,17 +113,13 @@ var Member2FeMale = {
 }
 
 // ***********************
-var module = new TransformationModule('test', Mi.ma, Mo); //multiple
+var module = new Transformation(); //multiple
 module.addRule(Member2Male);
 module.addRule(Member2FeMale);
-
-//Apply rule by rule...
-//module.apply(t);
-//module.apply(trule2);
 
 //inspect(Mi.ma.Filter(MMI.Member));
 
 //Apply all rules in the models and resolve references, actual transformation execution
-module.applyAllRules();
+module.apply(Mi.ma, Mo);
 
 inspect(Mo);

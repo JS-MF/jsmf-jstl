@@ -4,8 +4,8 @@
 ©2015 Luxembourg Institute of Science and Technology All Rights Reserved
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Authors : J.S. Sottet, A Vagner
-Contributors: G. Garcia-Frey, N. Biri
+Authors : J.S. Sottet, A Vagner, N. Biri
+Contributors: G. Garcia-Frey
 
 * ideas to be implemented : could show transformation execution step by step, construct a model, etc.
 *   todo :
@@ -13,72 +13,128 @@ Contributors: G. Garcia-Frey, N. Biri
             - Multiple input/output models
             - Hide the complex object for input
 */
+'use strict';
 
 var _ = require('lodash');
 
-function TransformationModule(name, inputModel, outputModel) {
-    this.name = name;
-    this.inputModel = inputModel;
-    this.outputModel = outputModel;
+/** @constuctor
+ * Initiate a transformation module.
+ */
+function Transformation() {
     this.rules = [];
-
-    this.resolveRef = [];
-    this.resolver = {};
+    this.helpers = [];
 }
 
-TransformationModule.prototype.addRule = function(rule) {
-        //check first condition + rules
-       this.rules.push(rule);
+/** Add a transformation rule to a transformation module.
+ *  @param {Object} r - the rule.
+ *  @param {function} r.in - A function that will take a inputModel in input to output a set of elements
+ *        that must be implied in this transformation.
+ *  @param {function} r.out - A function that take an element of the selection and (optionally) the input model in parameters
+ *        and output an array of created elements.
+ *  @param {string} r.name - An optional name for the rule, not used yet.
+ */
+Transformation.prototype.addRule = function(r) {this.rules.push(r)};
+
+/** Add a helper to a transformation module.
+ * @param {Object} h - the helper.
+ *  @param {Function} h.generation - A function that will be applied on an input model
+ *  @param {string} h.name - the name of the helper, that will be used to reference the helper when we need it.
+ */
+Transformation.prototype.addHelper = function(h) {this.helpers.push(h)};
+
+function Context() {
+    this.generated = new Mapping();
+    this.helpers = {};
+    this.referencesResolutions = [];
 }
 
-TransformationModule.prototype.apply = function(rule) {
-    var self = this;
+Context.prototype.addResolution = function(r) {this.referencesResolutions.push(r)};
 
-    //WARNING the input model is fixed and should be specified by the rule or for each rules (i.e., multiple input models).
-    var i = rule.in(this.inputModel);
-    //
-    //process output model elements
-    _.each(i, function(id,index){
-        var output = rule.out(id, self.inputModel);
+Context.prototype.assign = function(element, relationName, populators) {
+    this.addResolution(new ReferenceResolution(element, relationName, populators));
+}
 
-        var partOutput = _.partition(output, function(idx) { return idx.conformsTo == undefined ;});
-        self.resolveRef = self.resolveRef.concat(partOutput[0]);
-        if (self.resolver[id.__jsmfId] === undefined) {
-            self.resolver[id.__jsmfId] = [];
-        }
-        var resolverEntry = _.find(self.resolver[id.__jsmfId], function(x) {return x.key === id});
-        if (resolverEntry === undefined) {
-           resolverEntry = {key: id, value: []};
-           self.resolver[id.__jsmfId].push(resolverEntry);
-        }
-        _.forEach(partOutput[1], function(idx) {
-            self.outputModel.setModellingElement(idx); //set the reference to created model element to outputModel
+/** @constructor
+ * A transformation rule
+ *  @param {function} selection - a function that will take a inputModel in input to output a set of elements
+ *        that must be implied in this transformation.
+ *  @param {function} out - A function that take an element of the selection and (optionally) the input model in parameters
+ *  and output an array of created elements.
+ *  @param {string} [name] - The name for the rule, not used yet.
+ */
+function Rule(selection, out, name) {
+    /** @member {function} in */
+    this.in = selection;
+    /** @member {function} out */
+    this.out = out;
+    /** @member {string} name */
+    this.name = name;
+}
+
+function runRule(rule, context, inputModel, outputModel) {
+    var selection = rule.in.call(context, inputModel);
+    _.forEach(selection, function(e) {
+        var generated = rule.out.call(context, e, inputModel);
+        context.generated.map(e, generated);
+        _.forEach(generated, function(x) {
+            outputModel.setModellingElement(x);
         });
-        resolverEntry.value = resolverEntry.value.concat(partOutput[1]);
     });
 }
 
-TransformationModule.prototype.applyAllRules = function() {
-    var self = this;
-    _.each(self.rules, function(elem,index) {
-            self.apply(elem);
-    });
-    _.each(self.resolveRef,
-       function(elem, index) {
-        var relationName = elem.relationname;
-        relationType = elem.source.conformsTo().getAllReferences()[relationName].type;
-        var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
-        _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
-            function(elem2) {
-                var resolverEntry = _.find(self.resolver[elem2.__jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
-                _.each(resolverEntry.value, function(target) {
-                    // check target type??
+/** @constructor
+ *  @param {Function} generation - A function that will be applied on an input model
+ *  @param {string} name - the name of the helper, that will be used to reference the helper when we need it.
+ */
+function Helper(generation, name) {
+    this.map = generator;
+    this.name = name;
+}
+
+function runHelper(helper, context, inputModel, outputModel) {
+    var generated = helper.map.call(context, inputModel);
+    context.helpers[helper.name] = generated;
+}
+
+/** @constructor
+ * @param {Object} element - the element that will be modified by this resolution
+ * @param {string} relationName - the name of the relation to populate
+ * @param {Object[]} populators - the input model elements that should be resolved to populate the relation.
+ */
+function ReferenceResolution(element, relationName, populators) {
+    this.source = element;
+    this.relationName = relationName;
+    this.target = populators;
+}
+
+function runResolution(resolution, generated) {
+    var relationType = resolution.source.conformsTo().getAllReferences()[resolution.relationName].type;
+    var referenceFunctionName = 'set' + resolution.relationName[0].toUpperCase() + resolution.relationName.slice(1);
+    _.each(resolution.target,  // get the type of the target(s) of the relation element in the input model in order to...
+           function(elem) {
+               var values = generated.valuesFor(elem) || [];
+               _.each(values, function(target) {
                     if (hasClass(target, relationType)) {
-                        elem.source[referenceFunctionName](target);
+                        resolution.source[referenceFunctionName](target);
                     }
-                });
-            }
-        );
+               });
+           });
+}
+
+/** Apply a trsnformation on an input model, and put generated elements in a given ouput model.
+ * @param {Object} inputModel - The input model.
+ * @param {Object} outputModel - The output model.
+ */
+Transformation.prototype.apply = function(inputModel, outputModel) {
+    var ctx = new Context();
+    _.forEach(this.helpers, function(h) {
+        runHelper(h, ctx, inputModel, outputModel);
+    });
+    _.forEach(this.rules, function(r) {
+        runRule(r, ctx, inputModel, outputModel);
+    });
+    _.forEach(ctx.referencesResolutions, function(r) {
+        runResolution(r, ctx.generated);
     });
 }
 
@@ -88,8 +144,36 @@ var hasClass = function (x, type) {
                   function (c) {return _.includes(types, c)});
 }
 
+function Mapping() {
+    // aberration, we should use ES6 Map ASAP
+}
+
+Mapping.prototype.findEntry = function(k) {
+    return _.find(this[k.__jsmfId], function(x) {return x.key === k;});
+}
+
+Mapping.prototype.valuesFor = function(k) {
+    var entry = this.findEntry(k);
+    if (entry !== undefined) {return entry.values;}
+}
+
+Mapping.prototype.map = function(k, v) {
+    var entry = this.findEntry(k);
+    if (entry === undefined) {
+        entry = {key: k, values: []};
+        if (this[k.__jsmfId] === undefined) {
+            this[k.__jsmfId] = [entry];
+        } else {
+            this[k.__jsmfId].push(entry);
+        }
+    }
+    v = v instanceof Array ? v : [v];
+    entry.values = entry.values.concat(v);
+}
+
 module.exports = {
 
-    TransformationModule: TransformationModule
+    Mapping: Mapping,
+    Transformation: Transformation
 
 };
