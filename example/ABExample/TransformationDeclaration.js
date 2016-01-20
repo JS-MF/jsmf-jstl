@@ -1,4 +1,4 @@
-var JSTL = require('../../index'); var TransformationModule= JSTL.TransformationModule;
+var JSTL = require('../../index'); var Transformation= JSTL.Transformation;
 var JSMF = require('jsmf-core'); var Model = JSMF.Model; var Class = JSMF.Class;
 
 //Load the metamodels (in one file for the example)
@@ -54,19 +54,16 @@ var transformation1  = { //ATL <=> rule transformation1 {
     out : function(inp) {                           //ATL <=> to (withtout any ref to output elements)
             var b = MM.B.newInstance('');           // <=> o : MM!B //here we call newInstance explicitly.. should be hidden
             b.setNameB(inp.name+'_transfo');        //ATL <=> nameB <= inp.name+'transfo'
-            relation = {
-                source : b,
-                relationname : 'toD',
-                target : inp.toC         // this should be b.toC=inp.toC
-            }                           //ATL <=> targetOutput <- i.targetInput
-            return [b, relation];        //to be hidden?.... order independent, possible mutilple outputmodel elements!
+            this.assign(b, 'toD', inp.toC); // this should be b.toC=inp.toC
+                                            // ATL <=> targetOutput <- i.targetInput
+            return [b];        //to be hidden?.... order independent, possible mutilple outputmodel elements!
     }
 }
 
 /* *************************
 *   Transformation Launcher
 *****************************/
-var module = new TransformationModule('test', M.ma, M.mb); //multiple input/output models? -> not implemented yet
+var module = new Transformation(); //multiple input/output models? -> not implemented yet
 //Order independent
 module.addRule(trule2);
 module.addRule(transformation1);
@@ -76,7 +73,7 @@ module.addRule(transformation1);
 //module.apply(trule2);
 
 //Apply all rules in the models and resolve references, actual transformation execution
-module.applyAllRules();
+module.apply(M.ma, M.mb);
 
 inspect(M.mb);
 //(_(M.mb.Filter(MM.B)).first());

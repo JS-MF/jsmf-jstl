@@ -11,7 +11,7 @@ Authors : Nicolas Biri
 
 // model imports
 var JSTL = require('../../index');
-var TransformationModule= JSTL.TransformationModule;
+var Transformation = JSTL.Transformation;
 var NAV = require('jsmf-magellan');
 var Model = require('jsmf-core').Model;
 
@@ -29,23 +29,15 @@ var MMO = require('./MMAbstractCode');
 var input = require('./MArduinoML').switchExample;
 var output = new Model('Out');
 
-var module = new TransformationModule('arduinoToCode', input, output);
+var module = new Transformation();
 
 module.addRule({
     in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var app = MMO.App.newInstance();
-        var appStructural = {
-            source: app,
-            relationname: 'structural',
-            target: [i]
-        }
-        var appBehavioural = {
-            source: app,
-            relationname: 'behavioural',
-            target: [i]
-        }
-        return [app, appStructural, appBehavioural];
+        this.assign(app, 'structural', [i]);
+        this.assign(app, 'behavioural', [i]);
+        return [app];
     }
 });
 
@@ -53,17 +45,9 @@ module.addRule({
     in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var s = MMO.StructuralConcerns.newInstance();
-        var sBrickAliases = {
-            source: s,
-            relationname: 'alias',
-            target: i.brick
-        }
-        var sPinModes = {
-            source: s,
-            relationname: 'pinMode',
-            target: i.brick
-        }
-        return [s, sBrickAliases, sPinModes]
+        this.assign(s, 'alias', i.brick);
+        this.assign(s, 'pinMode', i.brick);
+        return [s];
     }
 });
 
@@ -93,18 +77,9 @@ module.addRule({
     out: function(i) {
         var b = MMO.BehaviouralConcerns.newInstance();
         b.setTimeConfig(MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200}));
-        // module.affect(b, 'stateFunction', i.State);
-        var bStateFunction = {
-            source: b,
-            relationname: 'stateFunction',
-            target: i.state
-        }
-        var bMainLoop = {
-            source: b,
-            relationname: 'mainLoop',
-            target: i.initial
-        }
-        return [b, bStateFunction, bMainLoop]
+        this.assign(b, 'stateFunction', i.state);
+        this.assign(b, 'mainLoop', i.initial);
+        return [b];
     }
 });
 
@@ -118,21 +93,15 @@ module.addRule({
             readOn: t.sensor[0].pin,
             read: t.value
         });
-        var sWrite = {
-            source: s,
-            relationname: 'write',
-            target: i.action
-        }
-        return [s, sWrite];
+        this.assign(s, 'write', i.action);
+        return [s];
     }
 });
 
 module.addRule({
     in: function(x) { return NAV.allInstancesFromModel(MMI.State, x)},
     out: function(i) {
-        return [MMO.MainLoop.newInstance({
-            init: i.name
-        })];
+        return [MMO.MainLoop.newInstance({ init: i.name })];
     }
 });
 
@@ -149,6 +118,6 @@ module.addRule({
 
 
 // launch transformation
-module.applyAllRules();
+module.apply(input, output);
 
 _.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(MMO.App.toCode(x))});
