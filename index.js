@@ -17,6 +17,7 @@ Contributors: G. Garcia-Frey
 
 var _ = require('lodash');
 
+
 /** @constuctor
  * Initiate a transformation module.
  */
@@ -46,6 +47,7 @@ function Context() {
     this.generated = new Mapping();
     this.helpers = {};
     this.referencesResolutions = [];
+    this.generationLog = new Mapping();
 }
 
 Context.prototype.addResolution = function(r) {this.referencesResolutions.push(r)};
@@ -71,11 +73,16 @@ function Rule(selection, out, name) {
     this.name = name;
 }
 
-function runRule(rule, context, inputModel, outputModel) {
+function runRule(rule, context, inputModel, outputModel, debug) {
     var selection = rule.in.call(context, inputModel);
     _.forEach(selection, function(e) {
         var generated = rule.out.call(context, e, inputModel);
         context.generated.map(e, generated);
+        if (debug) {
+          _.forEach(generated, function(x) {
+              context.generationLog.map(x, {rule: rule, source: e});
+          });
+        }
         _.forEach(generated, function(x) {
             outputModel.setModellingElement(x);
         });
@@ -125,17 +132,18 @@ function runResolution(resolution, generated) {
  * @param {Object} inputModel - The input model.
  * @param {Object} outputModel - The output model.
  */
-Transformation.prototype.apply = function(inputModel, outputModel) {
+Transformation.prototype.apply = function(inputModel, outputModel, debug) {
     var ctx = new Context();
     _.forEach(this.helpers, function(h) {
         runHelper(h, ctx, inputModel, outputModel);
     });
     _.forEach(this.rules, function(r) {
-        runRule(r, ctx, inputModel, outputModel);
+        runRule(r, ctx, inputModel, outputModel, debug);
     });
     _.forEach(ctx.referencesResolutions, function(r) {
         runResolution(r, ctx.generated);
     });
+    return ctx;
 }
 
 var hasClass = function (x, type) {
