@@ -6,9 +6,6 @@ var MM = require('./MMABExamples'); //var A = MM.A; //for defining quick access 
 
 //Load the model (in one file for the example)
 var M = require('./MABExamples');
-var inspect = require('eyes').inspector({
-    maxLength: 9000
-});
 
 // <=> to the underscore library.
 var _ = require('lodash');
@@ -31,13 +28,12 @@ var _ = require('lodash');
 var trule2 = {                                      //ATL <=> rule trule2 {
 
     in : function(inputModel) {                      //ATL <=> from inputModel : MM!C
-        console.log(inputModel.Filter(MM.C));
         return inputModel.Filter(MM.C);
     },
 
     out : function(inp) {
-        var d = MM.D.newInstance('transformed');    //ATL<~>d: MM!D (
-        d.setNum(inp.id);                           // ATL <=> num <- inp.id
+        var d = MM.D.newInstance();                //ATL<~>d: MM!D (
+        d.num = inp.id;                           // ATL <=> num <- inp.id
         return [d];
     }
 }
@@ -54,27 +50,23 @@ var transformation1  = { //ATL <=> rule transformation1 {
 
     out : function(inp) {                           //ATL <=> to (withtout any ref to output elements)
             var b = MM.B.newInstance('');           // <=> o : MM!B //here we call newInstance explicitly.. should be hidden
-            b.setNameB(inp.name+'_transfo');        //ATL <=> nameB <= inp.name+'transfo'
+            b.nameB = inp.name+'_transfo';        //ATL <=> nameB <= inp.name+'transfo'
             this.assign(b, 'toD', inp.toC); // this should be b.toC=inp.toC
-                                            // ATL <=> targetOutput <- i.targetInput
-            return [b];        //to be hidden?.... order independent, possible mutilple outputmodel elements!
+                                            // ATL <=> b.toD <- inp.toC
+            return [b];
     }
 }
 
 /* *************************
 *   Transformation Launcher
 *****************************/
-var module = new Transformation(); //multiple input/output models? -> not implemented yet
+var transformation = new Transformation(); //multiple input/output models? -> not implemented yet
 //Order independent
-module.addRule(trule2);
-module.addRule(transformation1);
+transformation.addRule(trule2);
+transformation.addRule(transformation1);
 
-//Apply rule by rule...
-//module.apply(t);
-//module.apply(trule2);
 
 //Apply all rules in the models and resolve references, actual transformation execution
-module.apply(M.ma, M.mb);
+transformation.apply(M.ma, M.mb);
 
-inspect(M.mb);
-//(_(M.mb.Filter(MM.B)).first());
+module.exports.result = M.mb;

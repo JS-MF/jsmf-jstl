@@ -20,9 +20,6 @@ var Mi = require('./MFamily');
 //Create the outputModel
 var Mo = new Model('Out');
 
-var inspect = require('eyes').inspector({
-    maxLength: 9000
-});
 
 // <=> to the underscore library.
 var _ = require('lodash');
@@ -45,7 +42,6 @@ function familyName(member) {
             keys.push(key);
         }
     });
-    //console.log(keys);
     _.each(keys, function(id,el){
         if(member[id].length==0) {
             // do nothing
@@ -105,7 +101,6 @@ var Member2FeMale = {
 
     out : function(inp) {
         var d = MMO.Female.newInstance('');
-        console.log(familyName(inp));
         familyName(inp);
         d.setFullName(inp.firstName+' '+familyName(inp));
         return [d];
@@ -113,13 +108,12 @@ var Member2FeMale = {
 }
 
 // ***********************
-var module = new Transformation(); //multiple
-module.addRule(Member2Male);
-module.addRule(Member2FeMale);
+var transformation = new Transformation(); //multiple
+transformation.addRule(Member2Male);
+transformation.addRule(Member2FeMale);
 
-//inspect(Mi.ma.Filter(MMI.Member));
 
 //Apply all rules in the models and resolve references, actual transformation execution
-module.apply(Mi.ma, Mo);
+transformation.apply(Mi.ma, Mo);
 
-inspect(Mo);
+module.exports.result = Mo;

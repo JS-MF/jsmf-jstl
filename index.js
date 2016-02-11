@@ -62,7 +62,7 @@ Context.prototype.assign = function(element, relationName, populators) {
  *        that must be implied in this transformation.
  *  @param {function} out - A function that take an element of the selection and (optionally) the input model in parameters
  *  and output an array of created elements.
- *  @param {string} [name] - The name for the rule, not used yet.
+ *  @param {string} [name] - The name of the rule, not used yet.
  */
 function Rule(selection, out, name) {
     /** @member {function} in */
