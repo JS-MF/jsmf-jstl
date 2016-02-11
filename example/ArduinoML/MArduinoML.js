@@ -13,7 +13,7 @@ switchExample.setReferenceModel(AML.ArduinoML);
 
 var button = AML.Sensor.newInstance({name: 'button', pin: 9});
 switchExample.add(button);
-var led = AML.Actuator.newInstance({name: 'led', pin: 12});
+var led = AML.Actuator.newInstance({name: 'led', pin: 13});
 switchExample.add(led);
 
 /*
@@ -22,7 +22,7 @@ switchExample.add(led);
 
 var aOn = AML.Action.newInstance({value: AML.Signal.HIGH, actuator: led});
 switchExample.add(aOn);
-var tOn = AML.Transition.newInstance({value: AML.Signal.HIGH, sensor: button});
+var tOn = AML.Transition.newInstance({value: AML.Signal.LOW, sensor: button});
 switchExample.add(tOn);
 var on = AML.State.newInstance({name: 'on', action: aOn, transition: tOn})
 switchExample.add(on);
@@ -33,7 +33,7 @@ switchExample.add(on);
 
 var aOff = AML.Action.newInstance({value: AML.Signal.LOW, actuator: led});
 switchExample.add(aOff);
-var tOff = AML.Transition.newInstance({value: AML.Signal.HIGH, sensor: button});
+var tOff = AML.Transition.newInstance({value: AML.Signal.LOW, sensor: button});
 switchExample.add(tOff);
 var off = AML.State.newInstance({name: 'off', action: aOff, transition: tOff})
 switchExample.add(off);

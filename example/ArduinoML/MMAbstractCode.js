@@ -37,11 +37,11 @@ BehaviouralConcerns.setReference('timeConfig', TimeConfig, 1);
 var StateFunction = Class .newInstance(
         'StateFunction',
         [],
-        {name: String, readOn: Number, read: Signal, next: String}
+        {name: String, readOn: String, read: Signal, next: String}
     );
 BehaviouralConcerns.setReference('stateFunction', StateFunction, -1);
 
-var Write = Class.newInstance('Write', [], {on: Number, value: Signal});
+var Write = Class.newInstance('Write', [], {on: String, value: Signal});
 StateFunction.setReference('write', Write, -1);
 
 var MainLoop = Class.newInstance('MainLoop', [], {init: String});
@@ -73,7 +73,7 @@ BrickAlias.toCode = function(x) {
 }
 
 PinMode.toCode = function(x) {
-    return '  pinMode(' + x.name + ', ' + IO.resolve(x.mode) + ');';
+    return '  pinMode(' + x.name + ', ' + IO.getName(x.mode) + ');';
 }
 
 BehaviouralConcerns.toCode = function(x) {
@@ -92,7 +92,7 @@ StateFunction.toCode = function(x) {
     return 'void state_' + x.name + '() {\n'
       + _.map(x.write, _.curry(Write.toCode)).join('\n\n')
       + '  boolean guard = millis() - time > debounce;\n'
-      + '  if (digitalRead(' + x.readOn + ') == ' + Signal.resolve(x.read) + '&& guard) {\n'
+      + '  if (digitalRead(' + x.readOn + ') == ' + Signal.getName(x.read) + ' && guard) {\n'
       + '    time = millis(); state_' + x.next + '();\n'
       + '  } else {\n'
       + '    state_' + x.name + '();\n'
@@ -101,7 +101,7 @@ StateFunction.toCode = function(x) {
 }
 
 Write.toCode = function(x) {
-    return '  digitalWrite(' + x.on + ', ' + x.value + ');\n';
+    return '  digitalWrite(' + x.on + ', ' + Signal.getName(x.value) + ');\n';
 }
 
 MainLoop.toCode = function(x) {

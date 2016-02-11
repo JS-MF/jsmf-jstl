@@ -90,7 +90,7 @@ module.addRule({
         var s = MMO.StateFunction.newInstance({
             name: i.name,
             next: t.next[0].name,
-            readOn: t.sensor[0].pin,
+            readOn: t.sensor[0].name,
             read: t.value
         });
         this.assign(s, 'write', i.action);
@@ -110,7 +110,7 @@ module.addRule({
     in: function(x) { return NAV.allInstancesFromModel(MMI.Action, x)},
     out: function(i) {
         return [MMO.Write.newInstance({
-            on: i.actuator[0].pin,
+            on: i.actuator[0].name,
             value: i.value
         })];
     }
@@ -118,6 +118,7 @@ module.addRule({
 
 
 // launch transformation
-module.apply(input, output);
+
+var log = module.apply(input, output, false);
 
 _.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(MMO.App.toCode(x))});

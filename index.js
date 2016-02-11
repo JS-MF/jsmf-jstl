@@ -84,7 +84,7 @@ function runRule(rule, context, inputModel, outputModel, debug) {
           });
         }
         _.forEach(generated, function(x) {
-            outputModel.setModellingElement(x);
+            outputModel.addModellingElement(x);
         });
     });
 }
@@ -116,7 +116,7 @@ function ReferenceResolution(element, relationName, populators) {
 
 function runResolution(resolution, generated) {
     var relationType = resolution.source.conformsTo().getAllReferences()[resolution.relationName].type;
-    var referenceFunctionName = 'set' + resolution.relationName[0].toUpperCase() + resolution.relationName.slice(1);
+    var referenceFunctionName = 'add' + resolution.relationName[0].toUpperCase() + resolution.relationName.slice(1);
     _.each(resolution.target,  // get the type of the target(s) of the relation element in the input model in order to...
            function(elem) {
                var values = generated.valuesFor(elem) || [];
