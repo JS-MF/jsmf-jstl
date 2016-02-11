@@ -9,20 +9,15 @@ var mma = new Model('MetaA');
 var mmb = new Model('MetaB');
 
 
-var e = new Enum('MyEnum');
-e.setLiteral('input',0);
-e.setLiteral('output',1);
-e.setLiteral('in-output',2);
-
-//console.log('e',e);
+var e = new Enum('MyEnum', ['input', 'output', 'in-output']);
 
 
 var A = Class.newInstance('A');
 A.setAttribute('name', String);
-//A.setAttribute('value', e);
+A.setAttribute('value', e);
 
 var C = Class.newInstance('C');
-C.setAttribute('id', Number); //define other primitive types?
+C.setAttribute('id', Number);
 
 A.setReference('toC', C, -1);
 

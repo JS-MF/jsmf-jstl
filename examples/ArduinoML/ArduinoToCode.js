@@ -76,7 +76,7 @@ module.addRule({
     in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
     out: function(i) {
         var b = MMO.BehaviouralConcerns.newInstance();
-        b.setTimeConfig(MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200}));
+        b.timeConfig = MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200});
         this.assign(b, 'stateFunction', i.state);
         this.assign(b, 'mainLoop', i.initial);
         return [b];

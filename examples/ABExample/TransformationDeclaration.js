@@ -16,7 +16,7 @@ var _ = require('lodash');
 
 /*****************************************************************
 * example transformation input model (ma) and output model (mb)
-* ma:   A(name) -> C(id)
+* ma:   A(name)  -> C(id)
 *       ^        ^  ^
 *       |        |  |
 * mb:   B(nameB) -> D(num)
@@ -31,6 +31,7 @@ var _ = require('lodash');
 var trule2 = {                                      //ATL <=> rule trule2 {
 
     in : function(inputModel) {                      //ATL <=> from inputModel : MM!C
+        console.log(inputModel.Filter(MM.C));
         return inputModel.Filter(MM.C);
     },
 

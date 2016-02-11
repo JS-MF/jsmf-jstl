@@ -42,8 +42,8 @@ switchExample.add(off);
 /*
  * set transitions
  */
-tOn.setNext(off);
-tOff.setNext(on);
+tOn.next = off;
+tOff.next = on;
 
 
 /*
