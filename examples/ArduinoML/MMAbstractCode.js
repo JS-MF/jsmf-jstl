@@ -2,27 +2,25 @@
 
 var _ = require('lodash');
 
-var Class;
-var Model;
-var Enum;
+var Class, Model, Enum;
 
-(function() {var JSMF = require('jsmf-core');
+var JSMF = require('jsmf-core');
+(function() {
     Model = JSMF.Model;
     Class = JSMF.Class;
     Enum = JSMF.Enum;
 }).call();
 
-var AbstractCode = new Model('AbstractCode');
 
 var App = Class.newInstance('App');
 
-var IO = new Enum('IO', {INPUT: 0, OUTPUT: 1});
-var Signal = new Enum('Signal', {LOW: 0, HIGH: 1});
+var IO = new Enum('IO', ['INPUT', 'OUTPUT']);
+var Signal = new Enum('Signal', ['LOW', 'HIGH']);
 
 var StructuralConcerns = Class.newInstance('StructuralConcerns');
 App.setReference('structural', StructuralConcerns, 1);
 
-var BrickAlias = Class.newInstance('BrickAlias', [], {name: String, pin: Number});
+var BrickAlias = Class.newInstance('BrickAlias', [], {name: String, pin: JSMF.Range(0,13)});
 StructuralConcerns.setReference('alias', BrickAlias, -1);
 
 var PinMode = Class.newInstance('PinMode', [], {name: String, mode: IO});
@@ -31,7 +29,7 @@ StructuralConcerns.setReference('pinMode', PinMode, -1);
 var BehaviouralConcerns = Class.newInstance('BehaviouralConcerns');
 App.setReference('behavioural', BehaviouralConcerns, 1);
 
-var TimeConfig = Class.newInstance('Timeconfig', [], {initialTime: Number, debounce: Number});
+var TimeConfig = Class.newInstance('TimeConfig', [], {initialTime: Number, debounce: Number});
 BehaviouralConcerns.setReference('timeConfig', TimeConfig, 1);
 
 var StateFunction = Class .newInstance(
@@ -47,77 +45,67 @@ StateFunction.setReference('write', Write, -1);
 var MainLoop = Class.newInstance('MainLoop', [], {init: String});
 BehaviouralConcerns.setReference('mainLoop', MainLoop, 1);
 
-AbstractCode.setModellingElements(
-    [App, StructuralConcerns, BehaviouralConcerns, BrickAlias, PinMode, TimeConfig, StateFunction, MainLoop, Signal, IO]
-);
+var AbstractCode = new Model('AbstractCode', [], App, true);
 
 
 /**
  * Code Generation
  */
 
-App.toCode = function(app) {
-    return StructuralConcerns.toCode(app.structural[0]) + '\n\n' + BehaviouralConcerns.toCode(app.behavioural[0]);
+function toCode(xs, n) {
+    return _.map(xs, function(x) {return x.toCode()}).join(n);
 }
 
-StructuralConcerns.toCode = function(x) {
-    return _.map(x.alias, _.curry(BrickAlias.toCode)).join('\n')
+App.prototype.toCode = function() {
+    return toCode(this.structural) + '\n\n' + toCode(this.behavioural);
+}
+
+StructuralConcerns.prototype.toCode = function() {
+    return toCode(this.alias, '\n')
       + '\n\n'
       + 'void setup() {\n'
-      + _.map(x.pinMode, _.curry(PinMode.toCode)).join('\n')
+      + toCode(this.pinMode, '\n')
       + '\n}';
 }
 
-BrickAlias.toCode = function(x) {
-    return 'int ' + x.name + ' = ' + x.pin + ';';
+BrickAlias.prototype.toCode = function() {
+    return 'int ' + this.name + ' = ' + this.pin + ';';
 }
 
-PinMode.toCode = function(x) {
-    return '  pinMode(' + x.name + ', ' + IO.getName(x.mode) + ');';
+PinMode.prototype.toCode = function() {
+    return '  pinMode(' + this.name + ', ' + IO.getName(this.mode) + ');';
 }
 
-BehaviouralConcerns.toCode = function(x) {
-    return TimeConfig.toCode(x.timeConfig[0])
+BehaviouralConcerns.prototype.toCode = function() {
+    return toCode(this.timeConfig)
       + '\n\n'
-      + _.map(x.stateFunction, _.curry(StateFunction.toCode)).join('\n\n')
+      + toCode(this.stateFunction, '\n\n')
       + '\n\n'
-      + MainLoop.toCode(x.mainLoop[0]);
+      + toCode(this.mainLoop);
 }
 
-TimeConfig.toCode = function(x) {
-    return 'long time = ' + x.initialTime + '; long debounce = ' + x.debounce + ';';
+TimeConfig.prototype.toCode = function() {
+    return 'long time = ' + this.initialTime + '; long debounce = ' + this.debounce + ';';
 }
 
-StateFunction.toCode = function(x) {
-    return 'void state_' + x.name + '() {\n'
-      + _.map(x.write, _.curry(Write.toCode)).join('\n\n')
+StateFunction.prototype.toCode = function() {
+    return 'void state_' + this.name + '() {\n'
+      + toCode(this.write, '\n\n')
       + '  boolean guard = millis() - time > debounce;\n'
-      + '  if (digitalRead(' + x.readOn + ') == ' + Signal.getName(x.read) + ' && guard) {\n'
-      + '    time = millis(); state_' + x.next + '();\n'
+      + '  if (digitalRead(' + this.readOn + ') == ' + Signal.getName(this.read) + ' && guard) {\n'
+      + '    time = millis(); state_' +this.next + '();\n'
       + '  } else {\n'
-      + '    state_' + x.name + '();\n'
+      + '    state_' + this.name + '();\n'
       + '  }\n'
       + '}';
 }
 
-Write.toCode = function(x) {
-    return '  digitalWrite(' + x.on + ', ' + Signal.getName(x.value) + ');\n';
+Write.prototype.toCode = function() {
+    return '  digitalWrite(' + this.on + ', ' + Signal.getName(this.value) + ');\n';
 }
 
-MainLoop.toCode = function(x) {
-    return 'void loop() { state_' + x.init + '(); }';
+MainLoop.prototype.toCode = function() {
+    return 'void loop() { state_' + this.init + '(); }';
 }
 
-module.exports = {
-  App: App,
-  StructuralConcerns: StructuralConcerns,
-  BehaviouralConcerns: BehaviouralConcerns,
-  BrickAlias: BrickAlias,
-  PinMode: PinMode,
-  TimeConfig: TimeConfig,
-  StateFunction: StateFunction,
-  Write: Write,
-  MainLoop: MainLoop,
-  Signal: Signal,
-  IO: IO
-}
+module.exports = JSMF.modelExport(AbstractCode);

@@ -121,4 +121,4 @@ module.addRule({
 
 var log = module.apply(input, output, false);
 
-_.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(MMO.App.toCode(x))});
+_.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(x.toCode())});
