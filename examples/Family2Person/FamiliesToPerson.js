@@ -93,7 +93,7 @@ var Member2Male = {
 var Member2FeMale = {
 
     in : function(inputModel) {
-        return  _.select(inputModel.Filter(MMI.Member),
+        return  _.filter(inputModel.Filter(MMI.Member),
                     function(elem){
                         return isFemale(elem);
                     });

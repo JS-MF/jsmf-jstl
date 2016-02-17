@@ -5,16 +5,16 @@ var inspect = require('eyes').inspector({
 });
 
 var ma = new Model('a');
-var familyMarch = MM.Family.newInstance('march');
+var familyMarch = MM.Family.newInstance();
 familyMarch.lastName = 'March';
 
-var fatherM = MM.Member.newInstance('Jim');
+var fatherM = MM.Member.newInstance();
 fatherM.firstName = 'Jim';
-var motherM = MM.Member.newInstance('Cindy');
+var motherM = MM.Member.newInstance();
 motherM.firstName = 'Cindy';
-var sonM = MM.Member.newInstance('Brandon');
+var sonM = MM.Member.newInstance();
 sonM.firstName = 'Brandon';
-var daughterM = MM.Member.newInstance('Brenda');
+var daughterM = MM.Member.newInstance();
 daughterM.firstName = 'Brenda';
 
 fatherM.familyFather = familyMarch;
@@ -22,22 +22,22 @@ motherM.familyMother = familyMarch;
 sonM.familySon = familyMarch;
 daughterM.familyDaughter = familyMarch;
 
-var familySailor = MM.Family.newInstance('Sailor');
+var familySailor = MM.Family.newInstance();
 familySailor.lastName = 'Sailor';
 
-var FatherS = MM.Member.newInstance('Peter');
+var FatherS = MM.Member.newInstance();
 FatherS.firstName = 'Peter';
 
-var MotherS = MM.Member.newInstance('Jackie');
+var MotherS = MM.Member.newInstance();
 MotherS.firstName = 'Jackie';
 
-var SonS1 = MM.Member.newInstance('David');
+var SonS1 = MM.Member.newInstance();
 SonS1.firstName = 'David';
 
-var SonS2 = MM.Member.newInstance('Dylan');
+var SonS2 = MM.Member.newInstance();
 SonS2.firstName = 'Dylan';
 
-var DaughterS = MM.Member.newInstance('Kelly');
+var DaughterS = MM.Member.newInstance();
 DaughterS.firstName = 'Kelly';
 
 FatherS.familyFather = familySailor;
