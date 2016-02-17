@@ -166,13 +166,17 @@ Mapping.prototype.valuesFor = function(k) {
 }
 
 Mapping.prototype.map = function(k, v) {
+    var key = k.__meta__.uuid;
+    if (key === undefined) {
+        throw new Error('Invalid key for mapping: ' + k);
+    }
     var entry = this.findEntry(k);
     if (entry === undefined) {
         entry = {key: k, values: []};
-        if (this[k.__meta__.uuid] === undefined) {
-            this[k.__meta__.uuid] = [entry];
+        if (this[key] === undefined) {
+            this[key] = [entry];
         } else {
-            this[k.__meta__.uuid].push(entry);
+            this[key].push(entry);
         }
     }
     v = v instanceof Array ? v : [v];
