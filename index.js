@@ -157,7 +157,7 @@ function Mapping() {
 }
 
 Mapping.prototype.findEntry = function(k) {
-    return _.find(this[k.__jsmfId], function(x) {return x.key === k;});
+    return _.find(this[k.__meta__.uuid], function(x) {return x.key === k;});
 }
 
 Mapping.prototype.valuesFor = function(k) {
@@ -169,10 +169,10 @@ Mapping.prototype.map = function(k, v) {
     var entry = this.findEntry(k);
     if (entry === undefined) {
         entry = {key: k, values: []};
-        if (this[k.__jsmfId] === undefined) {
-            this[k.__jsmfId] = [entry];
+        if (this[k.__meta__.uuid] === undefined) {
+            this[k.__meta__.uuid] = [entry];
         } else {
-            this[k.__jsmfId].push(entry);
+            this[k.__meta__.uuid].push(entry);
         }
     }
     v = v instanceof Array ? v : [v];
