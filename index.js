@@ -77,7 +77,8 @@ TransformationModule.prototype.applyAllRules = function() {
                 var resolverEntry = _.find(self.resolver[elem2._jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
                 _.each(resolverEntry.value, function(target) {
                     // check target type??
-                    if (hasClass(target, relationType)) {
+                    if (hasClass(target, relationType)
+                        || relationType.__name == 'Class') {
                         elem.source[referenceFunctionName](target);
                     }
                 });
