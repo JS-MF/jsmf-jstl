@@ -74,11 +74,11 @@ TransformationModule.prototype.applyAllRules = function() {
         var referenceFunctionName = 'set' + relationName[0].toUpperCase() + relationName.slice(1);
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2) {
-                var resolverEntry = _.find(self.resolver[elem2._jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
+                var resolverEntry = _.find(self.resolver[elem2.__jsmfId], function(x) {return x.key === elem2}) || {key: elem2, value: []};
                 _.each(resolverEntry.value, function(target) {
                     // check target type??
                     if (hasClass(target, relationType)
-                        || relationType.__name == 'Class') {
+                        || relationType.name == 'Class') {
                         elem.source[referenceFunctionName](target);
                     }
                 });
