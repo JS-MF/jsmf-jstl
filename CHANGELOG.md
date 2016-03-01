@@ -1,7 +1,4 @@
-# Changelog
-
-## v0.4
-
-- Introduce helpers
-- Introduce "this.assign"  for references resolution.
-- API refactoring.
+v0.6:
+  - Migration to jsmf-core 0.4
+v0.6:
+  - Migration to jsmf-core 0.4

@@ -121,7 +121,7 @@ function runResolution(resolution, generated) {
            function(elem) {
                var values = generated.valuesFor(elem) || [];
                _.each(values, function(target) {
-                    if (hasClass(target, relationType)) {
+                    if (relationType === undefined || hasClass(target, relationType)) {
                         resolution.source[referenceFunctionName](target);
                     }
                });
