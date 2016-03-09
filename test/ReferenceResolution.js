@@ -34,6 +34,6 @@ describe('References resolution', function() {
         target.modellingElements.Foo[0].foo.should.have.length(1);
         done();
     });
-    });
+});
 
 
