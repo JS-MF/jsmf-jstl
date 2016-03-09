@@ -177,7 +177,7 @@ function Mapping() {
 }
 
 Mapping.prototype.findEntry = function(k) {
-    return _.find(this[k.__meta__.uuid], function(x) {return x.key === k;});
+    return _.find(this[JSMF.jsmfId(k)], function(x) {return x.key === k;});
 }
 
 Mapping.prototype.valuesFor = function(k) {
@@ -186,7 +186,7 @@ Mapping.prototype.valuesFor = function(k) {
 }
 
 Mapping.prototype.map = function(k, v) {
-    var key = k.__meta__.uuid;
+    var key = JSMF.jsmfId(k);
     if (key === undefined) {
         throw new Error('Invalid key for mapping: ' + k);
     }
