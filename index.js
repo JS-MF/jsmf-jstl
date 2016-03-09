@@ -16,14 +16,19 @@ Contributors: G. Garcia-Frey
 'use strict';
 
 var _ = require('lodash');
+var JSMF = require('jsmf-core');
 
 
 /** @constuctor
  * Initiate a transformation module.
  */
-function Transformation() {
-    this.rules = [];
-    this.helpers = [];
+function Transformation(rules, helpers) {
+    var rs = [];
+    _.forEach(rules, function(x) {rs.push(x);});
+    this.rules = rs;
+    var hs = [];
+    _.forEach(helpers, function(x) {hs.push(x);});
+    this.helpers = hs;
 }
 
 /** Add a transformation rule to a transformation module.
@@ -34,14 +39,27 @@ function Transformation() {
  *        and output an array of created elements.
  *  @param {string} r.name - An optional name for the rule, not used yet.
  */
-Transformation.prototype.addRule = function(r) {this.rules.push(r)};
+Transformation.prototype.addRule = function(r) {
+    if (_.every(['in', 'out'], function(x) {return _.has(r, x);})) {
+        this.rules.push(r);
+    } else {
+        throw new Error('Invalid rule:' + r);
+    }
+};
+
 
 /** Add a helper to a transformation module.
  * @param {Object} h - the helper.
  *  @param {Function} h.generation - A function that will be applied on an input model
  *  @param {string} h.name - the name of the helper, that will be used to reference the helper when we need it.
  */
-Transformation.prototype.addHelper = function(h) {this.helpers.push(h)};
+Transformation.prototype.addHelper = function(h) {
+    if (_.every(['map', 'name'], function(x) {return _.has(h, x);})) {
+        this.helpers.push(h);
+    } else {
+        throw new Error('Invalid helper:' + h);
+    }
+};
 
 function Context() {
     this.generated = new Mapping();
@@ -50,7 +68,7 @@ function Context() {
     this.generationLog = new Mapping();
 }
 
-Context.prototype.addResolution = function(r) {this.referencesResolutions.push(r)};
+Context.prototype.addResolution = function(r) {this.referencesResolutions.push(r);};
 
 Context.prototype.assign = function(element, relationName, populators) {
     this.addResolution(new ReferenceResolution(element, relationName, populators));
@@ -94,7 +112,7 @@ function runRule(rule, context, inputModel, outputModel, debug) {
  *  @param {string} name - the name of the helper, that will be used to reference the helper when we need it.
  */
 function Helper(generation, name) {
-    this.map = generator;
+    this.map = generation;
     this.name = name;
 }
 
@@ -121,7 +139,7 @@ function runResolution(resolution, generated) {
            function(elem) {
                var values = generated.valuesFor(elem) || [];
                _.each(values, function(target) {
-                    if (relationType === undefined || hasClass(target, relationType)) {
+                    if (relationType === JSMF.JSMFAny || relationType === undefined || hasClass(target, relationType)) {
                         resolution.source[referenceFunctionName](target);
                     }
                });
@@ -131,9 +149,11 @@ function runResolution(resolution, generated) {
 /** Apply a trsnformation on an input model, and put generated elements in a given ouput model.
  * @param {Object} inputModel - The input model.
  * @param {Object} outputModel - The output model.
+ * @param {boolean} debug - Store additional information during the transformation.
  */
 Transformation.prototype.apply = function(inputModel, outputModel, debug) {
     var ctx = new Context();
+    outputModel = outputModel || new JSMF.Model('TransformationOutput');
     _.forEach(this.helpers, function(h) {
         runHelper(h, ctx, inputModel, outputModel);
     });
@@ -186,6 +206,8 @@ Mapping.prototype.map = function(k, v) {
 module.exports = {
 
     Mapping: Mapping,
+    Helper: Helper,
+    Rule: Rule,
     Transformation: Transformation
 
 };
