@@ -22,13 +22,14 @@ var JSMF = require('jsmf-core');
 /** @constuctor
  * Initiate a transformation module.
  */
-function Transformation(rules, helpers) {
+function Transformation(rules, helpers, keepUnchanged) {
     var rs = [];
     _.forEach(rules, function(x) {rs.push(x);});
     this.rules = rs;
     var hs = [];
     _.forEach(helpers, function(x) {hs.push(x);});
     this.helpers = hs;
+    this.keepUnchanged = keepUnchanged;
 }
 
 /** Add a transformation rule to a transformation module.
@@ -153,23 +154,38 @@ function runResolution(resolution, generated) {
  */
 Transformation.prototype.apply = function(inputModel, outputModel, debug) {
     var ctx = new Context();
-    outputModel = outputModel || new JSMF.Model('TransformationOutput');
+    ctx.inPlace = outputModel === undefined;
+    var targetModel = outputModel || new JSMF.Model('TransitionModel');
     _.forEach(this.helpers, function(h) {
-        runHelper(h, ctx, inputModel, outputModel);
+        runHelper(h, ctx, inputModel, targetModel);
     });
     _.forEach(this.rules, function(r) {
-        runRule(r, ctx, inputModel, outputModel, debug);
+        runRule(r, ctx, inputModel, targetModel, debug);
     });
+    if (this.keepUnchanged || ctx.inPlace) {
+        var keys = ctx.generated.keys();
+        _.forEach(_.difference(inputModel.elements(), keys), function(e) {
+            ctx.generated.map(e,e);
+            if (debug) {
+                ctx.generationLog.map(e, {rule: 'unchangedElement', source: e});
+            }
+            targetModel.addModellingElement(e);
+        })
+    }
     _.forEach(ctx.referencesResolutions, function(r) {
         runResolution(r, ctx.generated);
     });
+    if (ctx.inPlace) {
+        inputModel.modellingElements = targetModel.modellingElements;
+    }
     return ctx;
 }
 
 var hasClass = function (x, type) {
     var types = type instanceof Array ? type : [type];
     return _.some(x.conformsTo().getInheritanceChain(),
-                  function (c) {return _.includes(types, c)});
+                  function (c) {return _.includes(types, c)}
+            );
 }
 
 function Mapping() {
@@ -178,6 +194,10 @@ function Mapping() {
 
 Mapping.prototype.findEntry = function(k) {
     return _.find(this[JSMF.jsmfId(k)], function(x) {return x.key === k;});
+}
+
+Mapping.prototype.keys = function(k) {
+    return _.flatten(_.map(this, function(xs) {return _.map(xs, 'key');}));
 }
 
 Mapping.prototype.valuesFor = function(k) {

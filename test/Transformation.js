@@ -1,6 +1,8 @@
 'use strict';
 
 var JSTL = require('../index');
+var JSMF = require('jsmf-core');
+var _ = require('lodash');
 var should = require('should');
 
 describe('Transformation', function() {
@@ -28,6 +30,28 @@ describe('Transformation', function() {
         done();
     });
 
+    it('works inplace', function(done) {
+        var A = new JSMF.Class('A', [], {value: Number});
+        var B = new JSMF.Class('B');
+        A.setReference('foo', B);
+        var b = new B();
+        var a = new A({value: 41, foo: [b]});
+        var m = new JSMF.Model('MyModel', {}, [a,b]);
+        var t = new JSTL.Transformation();
+        t.addRule({
+            in: function(m) {return m.modellingElements.A},
+            out: function(e) {
+                var e_ = new A({value: e.value + 1});
+                this.assign(e_, 'foo', e.foo);
+                return [e_];
+            }
+        });
+        t.apply(m);
+        _.map(m.modellingElements.A, 'value').should.eql([42]);
+        _.flatMap(m.modellingElements.A, 'foo')[0].should.eql(b);
+        m.modellingElements.B[0].should.eql(b);
+        done();
+    });
 });
 
 describe('addHelper', function() {
