@@ -30,6 +30,6 @@
   "devDependencies": {
     "should": "~7.1.1",
     "eyes": "~0.1.8",
-    "jsmf-magellan": "git+ssh://git@git.list.lu:jsmf/jsmf-magellan.git#refactored"
+    "jsmf-magellan": "git+ssh://git@git.list.lu:jsmf/jsmf-magellan.git#0.3.0"
   }
 }
