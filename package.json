@@ -1,6 +1,6 @@
 {
   "name": "jsmf-jstl",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Model transformation for JSTL",
   "main": "index.js",
   "directories": {
@@ -25,7 +25,7 @@
   "dependencies": {
     "lodash": "~4.1.0",
     "object-hash": "~0.9.2",
-    "jsmf-core": "git+ssh://git@git.list.lu:jsmf/jsmf-core.git#0.4.0"
+    "jsmf-core": "git+ssh://git@git.list.lu:jsmf/jsmf-core.git#0.5.0"
   },
   "devDependencies": {
     "should": "~7.1.1",
