@@ -55,7 +55,7 @@ Transformation.prototype.addHelper = function(h) {
     if (_.every(['map', 'name'], x => _.has(h, x))) {
         this.helpers.push(h)
     } else {
-        throw new Error(`Invalid helper: ${h}`)
+        throw new TypeError(`Invalid helper: ${h}`)
     }
 }
 
@@ -90,16 +90,14 @@ function Rule(selection, out, name) {
 }
 
 function runRule(rule, context, inputModel, outputModel, debug) {
-    var selection = rule.in.call(context, inputModel)
+    const selection = rule.in.call(context, inputModel)
     _.forEach(selection, function(e) {
-        var generated = rule.out.call(context, e, inputModel)
+        const generated = rule.out.call(context, e, inputModel)
         const value = (context.generated.get(e) || [])
         context.generated.set(e, value.concat(generated))
         if (debug) {
           _.forEach(generated, function(x) {
-              const logValue = context.generationLog.get(e) || []
-              logValue.push({rule, source: e})
-              context.generationLog.map(x, logValue)
+              context.generationLog.set(x, {rule, source: e})
           })
         }
         _.forEach(generated, x => outputModel.addModellingElement(x))
@@ -116,7 +114,7 @@ function Helper(generation, name) {
 }
 
 function runHelper(helper, context, inputModel, outputModel) {
-    var generated = helper.map.call(context, inputModel)
+    const generated = helper.map.call(context, inputModel)
     context.helpers[helper.name] = generated
 }
 

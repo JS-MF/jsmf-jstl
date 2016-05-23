@@ -113,7 +113,9 @@ transformation.addRule(Member2Male);
 transformation.addRule(Member2FeMale);
 
 
-//Apply all rules in the models and resolve references, actual transformation execution
+// Apply all rules in the models and resolve references, actual transformation execution
 transformation.apply(Mi.ma, Mo);
+// Useless, used in test to see if debug mode is ok
+transformation.apply(Mi.ma, undefined, true)
 
 module.exports.result = Mo;
