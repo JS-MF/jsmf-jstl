@@ -7,118 +7,116 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : Nicolas Biri
  */
 
-'use strict';
+'use strict'
 
 // model imports
-var JSTL = require('../../index');
-var Transformation = JSTL.Transformation;
-var NAV = require('jsmf-magellan');
-var Model = require('jsmf-core').Model;
+const JSTL = require('../../index')
+const Transformation = JSTL.Transformation
+const NAV = require('jsmf-magellan')
+const Model = require('jsmf-core').Model
 
 // other imports
-var _ = require('lodash');
-var inspect = require('eyes').inspector({
-    maxLength: 50000
-});
+const _ = require('lodash')
+const inspect = require('eyes').inspector({maxLength: 50000})
 
 // Metamodels
-var MMI = require('./MMArduinoML');
-var MMO = require('./MMAbstractCode');
+const MMI = require('./MMArduinoML')
+const MMO = require('./MMAbstractCode')
 
 // input file
-var input = require('./MArduinoML').switchExample;
-var output = new Model('Out');
+const input = require('./MArduinoML').switchExample
+const output = new Model('Out')
 
-var module = new Transformation();
+const transfo = new Transformation()
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.App, x),
     out: function(i) {
-        var app = MMO.App.newInstance();
-        this.assign(app, 'structural', [i]);
-        this.assign(app, 'behavioural', [i]);
-        return [app];
+        var app = MMO.App.newInstance()
+        this.assign(app, 'structural', [i])
+        this.assign(app, 'behavioural', [i])
+        return [app]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.App, x),
     out: function(i) {
-        var s = MMO.StructuralConcerns.newInstance();
-        this.assign(s, 'alias', i.brick);
-        this.assign(s, 'pinMode', i.brick);
-        return [s];
+        var s = MMO.StructuralConcerns.newInstance()
+        this.assign(s, 'alias', i.brick)
+        this.assign(s, 'pinMode', i.brick)
+        return [s]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.Brick, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.Brick, x),
     out: function(i) {
-        return [MMO.BrickAlias.newInstance({name: i.name, pin: i.pin})];
+        return [MMO.BrickAlias.newInstance({name: i.name, pin: i.pin})]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.Sensor, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.Sensor, x),
     out: function(i) {
-        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.INPUT})];
+        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.INPUT})]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.Actuator, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.Actuator, x),
     out: function(i) {
-        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.OUTPUT})];
+        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.OUTPUT})]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.App, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.App, x),
     out: function(i) {
-        var b = MMO.BehaviouralConcerns.newInstance();
-        b.timeConfig = MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200});
-        this.assign(b, 'stateFunction', i.state);
-        this.assign(b, 'mainLoop', i.initial);
-        return [b];
+        var b = MMO.BehaviouralConcerns.newInstance()
+        b.timeConfig = MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200})
+        this.assign(b, 'stateFunction', i.state)
+        this.assign(b, 'mainLoop', i.initial)
+        return [b]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.State, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.State, x),
     out: function(i) {
-        var t = i.transition[0];
+        var t = i.transition[0]
         var s = MMO.StateFunction.newInstance({
             name: i.name,
             next: t.next[0].name,
             readOn: t.sensor[0].name,
             read: t.value
-        });
-        this.assign(s, 'write', i.action);
-        return [s];
+        })
+        this.assign(s, 'write', i.action)
+        return [s]
     }
-});
+})
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.State, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.State, x),
     out: function(i) {
-        return [MMO.MainLoop.newInstance({ init: i.name })];
+        return [MMO.MainLoop.newInstance({ init: i.name })]
     }
-});
+})
 
 
-module.addRule({
-    in: function(x) { return NAV.allInstancesFromModel(MMI.Action, x)},
+transfo.addRule({
+    in: x => NAV.allInstancesFromModel(MMI.Action, x),
     out: function(i) {
-        return [MMO.Write.newInstance({
+      return [MMO.Write.newInstance({
             on: i.actuator[0].name,
             value: i.value
-        })];
+        })]
     }
-});
+})
 
 
 // launch transformation
 
-var log = module.apply(input, output, false);
+const log = transfo.apply(input, output, false)
 
-_.forEach(NAV.allInstancesFromModel(MMO.App, output), function(x) {console.log(x.toCode())});
+_.forEach(NAV.allInstancesFromModel(MMO.App, output), x => console.log(x.toCode()))
