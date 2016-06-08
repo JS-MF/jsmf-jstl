@@ -28,8 +28,9 @@
     "jsmf-core": "git+ssh://git@git.list.lu:jsmf/jsmf-core.git#0.4.0"
   },
   "devDependencies": {
-    "should": "~7.1.1",
     "eyes": "~0.1.8",
-    "jsmf-magellan": "git+ssh://git@git.list.lu:jsmf/jsmf-magellan.git#0.2.0"
+    "jsmf-magellan": "git+ssh://git@git.list.lu:jsmf/jsmf-magellan.git#0.2.0",
+    "mocha": "^2.5.3",
+    "should": "~7.1.1"
   }
 }
