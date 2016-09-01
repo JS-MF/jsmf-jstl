@@ -133,11 +133,16 @@ Model.prototype.contains = function (ModelElement) {
     return result;
 }
 
-
+//Get all element of a given metatype (Classifier)
 Model.prototype.Filter = function(Classifier) {
- return this.modellingElements[Classifier.__name] ;  
-    
+    return this.modellingElements[Classifier.__name] ;  
 }
+
+//Get all model elements that get a property 
+// get all model elements that do not have such property
+// get all model element that have a given relation name a -Rname-> b
+
+
 
 Model.prototype.setReferenceModel = function (metamodel) {
     this.referenceModel = metamodel;
@@ -207,15 +212,18 @@ Class.prototype.getAllReferences = function() {
 }
 
 Class.prototype.getAllAttributes = function() {
+    var ret = [];
     var result=[];
-   
-    result.push(this.__attributes)
-    var allsuperTypes = this.getInheritanceChain([]);
+    result.push(this.conformsTo().__attributes)
+    var allsuperTypes = this.conformsTo().getInheritanceChain([]);
     for(var i in allsuperTypes) {
 		refSuperType = allsuperTypes[i];
         result.push(refSuperType.__attributes);
 	}
-    return result;  
+    //return result;
+    _.each(result, function(elem,index) {
+        ret.push(this[index]);
+    });
 }
 
 //Instance of MetaClass is conforms to Class.
@@ -233,7 +241,6 @@ Class.prototype.setReference = function (name, type, cardinality, opposite, comp
         "card": cardinality,
         "associated":associated
     }
-    //To be TESTED
     if (opposite !== undefined) {
         var tmp = this.__references[name];
         tmp.opposite = opposite;
@@ -266,19 +273,34 @@ Enum.prototype.getValue= function(name) {
     return this.__literals[name];
 }
 
+Enum.prototype.isEnum = function() {
+    return true;   
+}
+
 /****************************************************************************************
 *       Building Instance: attributes and references conforms to metamodel elements
 ****************************************************************************************/
 function makeAssignation(ob, index, attype) {
     //if attype = primitive JS type else ...
-    var type = new attype;
-    return function (param) {
-        if (param.__proto__ == type.__proto__) { //Strict equal?
-            ob[index] = param;
-        } else {
-            console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
-        }
-    };
+    if ((typeof attype === 'function') && (typeof attype.isEnum !== 'undefined') && (attype.isEnum())) {
+        return function (param) {
+            var val = attype.getValue(param);
+            if (val !== undefined) {
+                ob[index] = val;
+            } else {
+                console.log("Error when assigning enum value: "+param);
+            }
+        };        
+    } else {
+        var type = new attype;
+        return function (param) {
+            if (param.__proto__ == type.__proto__) { //Strict equal?
+                ob[index] = param;
+            } else {
+                console.log("Assigning wrong type: " + param.__proto__ + " expected " + type.__proto__);
+            }
+        };
+    }
 }
 
 // Adding the creation of opposite except for ARRAY of Type
@@ -382,6 +404,28 @@ Class.prototype.newInstance = function (name) {
     // Assign the "type" to which M1 class is conform to.
     result.conformsTo = function () {
         return self;
+    };
+    
+    result.newInstance = function(name) {
+       var nminusone = {};
+        //Step 1 promote result
+        //that help in getting all reference and attributes 
+        
+        //Step 2 instanciate the promoted class, 
+        nminusone.name=name;
+        
+        //nminusone.chiChain=result.chiChain;
+        //chiChain.push(result);
+        nminusone.chiChain=[Class, self,result]; //index 0 = higher element
+        
+        //keep the conformsTo() chain?
+        nminusone.conformsTo = function() {
+          return result;   
+        }
+        
+        
+        
+        return nminusone;
     };
 
     return result;

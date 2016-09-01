@@ -22,6 +22,7 @@ describe('Create Dynamic Instances', function() {
             State.setReference('property',Property, 1);
 
             s1 = State.newInstance('s1');
+            s1 = State.newInstance('s1');
             var tabOfInstance = {};
             for(i in State.__references) {
                 var Type = State.__references[i].type;      

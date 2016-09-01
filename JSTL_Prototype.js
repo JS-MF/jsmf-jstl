@@ -50,12 +50,12 @@ TransformationModule.prototype.apply = function(rule) {
         var output = rule.out(id);  
       
         _.each(output, function(idx,index) { 
-            if(idx.conformsTo==undefined) { //is resolve reference table (i.e. has no metamodel)
+            if(idx.conformsTo==undefined) { //it has no metamodel => it is a relation to resolve
                 self.resolveRef.push(output[index]);
             } else { //is outputelement (i.e. has a metamodel)
                 var idHash = hash(id)
                 //JSON.stringify(id)
-                self.resolver[idHash]=output[index]; //WARNING STRINGIFY OBJECT AS KEY... should have other unique object id
+                self.resolver[idHash]=output[index]; 
                 self.outputModel.setModellingElement(output[index]); //set the reference to created model element to outputModel
             }
         });
@@ -68,13 +68,18 @@ TransformationModule.prototype.applyAllRules = function() {
     _.each(self.rules, function(elem,index) {
             self.apply(elem); 
     });
-    //inspect(self.resolveRef);
+   // inspect(self.resolveRef);
     _.each(self.resolveRef, 
        function(elem, index) {
         _.each(elem.target,  // get the type of the target(s) of the relation element in the input model in order to...
             function(elem2,index2) {  
+                //SHOULD THROW an error if hash elem2 = undefined
+                if(self.resolver[hash(elem2)]===undefined) {
+                    console.log('Model element: '+ elem2+' has not been found in model');   
+                }
                 var target = self.resolver[hash(elem2)]; // ... resolve the target of the relation in the output model!
                 var referenceFunctionName = 'set'+elem.relationname;
+               
                 elem.source[referenceFunctionName](target);
             }
         );

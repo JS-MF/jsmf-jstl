@@ -91,7 +91,6 @@ for(i in ModelElement.conformsTo().__attributes) {
  });
 }
 
-
 function queryGeneration(ModelElement)  {
 	var queryPart="";
 	for(i in ModelElement.conformsTo().__attributes) {
@@ -124,49 +123,61 @@ function deleteAllNodes(ModelElement) {
 //DeleteNodeWithLabelAndProperties = avoid to resolve IDS check!!!
 
 function saveModel(Model) {
-	//building element list
-
+  //building element list
 	modelElements = [];
 	for(meta in Model.modellingElements) {
 		for(j in Model.modellingElements[meta]) {
 			modelElements.push(Model.modellingElements[meta][j]);
 		}
 	}  
-     //inspect(modelElements);
+  //inspect(modelElements);
 	//create node before references, using async lib
-	async.eachSeries(modelElements, function(element, callback) {	
+	async.eachSeries(modelElements, function(element, callback) {
 		var pushObject = {};
         
-        for(i in element.conformsTo().__attributes) {
-			 pushObject[i] = element[i];
-		  }
+    for(i in element.conformsTo().__attributes) {
+      pushObject[i] = element[i];
+    }
         
-        var labelMetaClass = element.conformsTo().__name;
-        var labelModelName = Model.__name;
+    var labelMetaClass = element.conformsTo().__name;
+    var labelModelName = Model.__name;
         
-        //WARNING We are in presence of undefined metaelement OR a metaclass
-        if(labelMetaClass==undefined) {      
-            labelMetaClass = Model.__name+"_Class_Undefined";
+    //WARNING We are in presence of undefined metaelement OR a metaclass
+    if(labelMetaClass==undefined) {      
+        labelMetaClass = Model.__name+"_Class_Undefined";
+    }
+    //use async read... then
+    db.readNodesWithLabelsAndProperties(labelMetaClass, pushObject, function (err, result) {
+      if(result!=undefined){
+        if(result.length!=0) {
+          //Always return the first value (oldest node)
+          var idSource = result[0]._id;
+          console.log(idSource);
         }
-       //add test if pushObject == ?
-		db.insertNode(pushObject , 
-			[labelMetaClass,Model.__name], //Add Model.__name as label to the object (Utility of labelModelName?)
-			function(err, result) {
-				if(err) {
-					throw err;
-				} else {
-					idSource = result._id;
-					console.log('Object of Type: '+labelMetaClass+' Added');
-					callback();
-				}
-		});	
+        console.log(idSource);
+        if(idSource==undefined) {
+          console.log('pushOBJ',pushObject,labelMetaClass);
+          db.insertNode(pushObject , 
+            [labelMetaClass,Model.__name], //Add Model.__name as label to the object (Utility of labelModelName?)
+            function(err, result) {
+              if(err) {
+                throw err;
+              } else {
+                idSource = result._id;
+                console.log('Object of Type: '+labelMetaClass+' Added');
+                callback();
+              }
+          });
+        } else {console.log('node already present in model: should update node'); callback();}
+      }
+		});
 	}, function (res) {
 		console.log("All nodes pushed into Neo4J... pushing associations");       
 		async.eachSeries(modelElements, function(element, callback5) {
 			//console.dir("Elements: "+element);
 			//createReferencesBVERSION(element,callback5);
-            createReferencesCVERSION(element,callback5);
-		}, function(res2) {
+      createReferencesCVERSION(element,callback5);
+    }, function(res2) {
 			console.log("Model pushed fully into Neo4J");
 		});
 	});
@@ -229,7 +240,7 @@ function createReferencesBVERSION(ModelElement, callback5) {
 //debug 
         //console.log('SOURCE! MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n');
 		db.cypherQuery('MATCH (n:'+querysourceType+') WHERE '+querySource+' RETURN n', null, function (err, result) {	
-			if(result.data.lenght!=0) {
+			if(result.data.length!=0) {
 				//Always return the first value (oldest node)
 				idSource = result.data[0]._id;		
 			} else {console.log("Error object not found in Database")};	
@@ -270,7 +281,7 @@ function createReferencesBVERSION(ModelElement, callback5) {
 				}
 			});// end dbInsert 
 		}, function(err) {
-			//callback5(); //all relation are supposed to be pushed into DB
+			//callback5(); //all relation are supposed to be pushed into db
 		});	
 		callback5();
 	}); //end parallel
@@ -291,111 +302,82 @@ function createReferencesCVERSION(ModelElement, callback5) {
 	
 	var targetElements=[];
 
-    var labelMetaClass = ModelElement.conformsTo().__name;
-    var pushObject = {};
+  var labelMetaClass = ModelElement.conformsTo().__name;
+  var pushObject = {};
     
-    var associatedObjectValues = ModelElement.associated;
+  var associatedObjectValues = ModelElement.associated;
     
-    console.log(associatedObjectValues);
+  //console.log(associatedObjectValues);
     
-    for(i in ModelElement.conformsTo().__attributes) {
-        pushObject[i] = ModelElement[i];
-    }
+  for(i in ModelElement.conformsTo().__attributes) {
+    pushObject[i] = ModelElement[i];
+  }
     
 	for(i in ModelElement.conformsTo().__references) {
-			currentRelationElement = ModelElement[i];
-			relationLabel = i;
-			for(relIt in currentRelationElement) {
-				//console.log('TOTO',relIt, currentRelationElement[relIt]); 
-				targetElements.push({label: relationLabel, el :currentRelationElement[relIt], id: relIt});
-			}
-	}
-	
-	//inspect(targetElements);
-	
+		currentRelationElement = ModelElement[i];
+		relationLabel = i;
+		for(relIt in currentRelationElement) {
+			//console.log('TOTO',relIt, currentRelationElement[relIt]); 
+			targetElements.push({label: relationLabel, el :currentRelationElement[relIt], id: relIt});
+		}
+	}	
 	//if referenceElement is not empty
-	async.parallelLimit( 
-	[ function(callback1) {
-		// Get Source ID if references...
-//debug 
-        //console.log('ELEM', labelMetaClass,pushObject);
-		db.readNodesWithLabelsAndProperties(labelMetaClass, pushObject, function (err, result) {	
-			if(result!=undefined){
-                if(result.lenght!=0) {
-				    //Always return the first value (oldest node)
-				    idSource = result[0]._id;		
-			     } else { console.log("Error object not found in Database")};	
-            } else {console.log("Error object not found in Database");}	
-			callback1();
-		});
-	},	function(callback3) {
-				async.eachSeries(targetElements, function(element,callback2) {
-				    var pushObject = {};
-                    //console.log('TOTO',element);
-                    var labelMetaClass = element.el.conformsTo().__name;
-					for(j in element.el.conformsTo().__attributes) {
-                        pushObject[j] = element.el[j];
-                    }			
-//debug 
-					db.readNodesWithLabelsAndProperties(labelMetaClass,pushObject, function (err, result) {	
-						if(result.length!=0) {
-							idTargets.push({label: element.label, el:result[0]._id, id:element.id});
-							//idTarget = result[0]._id;
-						} else {console.log("Error object not found in Database");}
-							callback2();
-						});
-					}, function(err) {
-						if(err)  {
-							console.log(err);
-						}
-						callback3();
-					});
-	}], 
-        10, //up to 10 queries in parallel (WARNING arbitrary limit).
-        function(err) {
+	async.parallelLimit([
+    function(callback1) {
+      // Get Source ID if references...
+      //debug 
+      //console.log('ELEM', labelMetaClass,pushObject);
+      db.readNodesWithLabelsAndProperties(labelMetaClass, pushObject, function (err, result) {	
+        if(result!=undefined){
+          if(result.length!=0) {
+            //Always return the first value (oldest node)
+            idSource = result[0]._id;		
+          } else { console.log("Error object not found in Database 3")};	
+        } else {console.log("Error object not found in Database 4");}	
+        callback1();
+      });
+    }, function(callback3) {
+      async.eachSeries(targetElements, function(element,callback2) {
+        var pushObject = {};
+        //console.log('TOTO',element);
+        var labelMetaClass = element.el.conformsTo().__name;
+        for(j in element.el.conformsTo().__attributes) {
+          pushObject[j] = element.el[j];
+        }			
+        //debug 
+        db.readNodesWithLabelsAndProperties(labelMetaClass,pushObject, function (err, result) {
+          if(result.length!=0) {
+            idTargets.push({label: element.label, el:result[0]._id, id:element.id});
+            //idTarget = result[0]._id;
+          } else {console.log("Error object not found in Database 5");}
+          callback2();
+        });
+      }, function(err) {
+        if(err)  {
+          console.log(err);
+        }
+        callback3();
+      });
+	}],
+  10, //up to 10 queries in parallel (WARNING arbitrary limit).
+  function(err) {
 		//console.log(idTargets);	
 		async.eachSeries(idTargets, function(relation, callback6) {
-//DEbug //console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
-                objectAssociation = _.select(ModelElement.associated, {ref:relation.label})[relation.id].associated;
-               // for( iteration in 
-			 db.insertRelationship(idSource,relation.el, relation.label,objectAssociation, function(err, result){ // let see if transition should support some properties... 
-				if(err) {
-					throw err;
-				} else {
-					relationid = result._id;
-					console.log("Reference created "+relation.label);
-					callback6();
-				}
-			});// end dbInsert 
+      //DEbug //console.log("insertion! "+ idSource+"->"+relation.el+" with label "+ relation.label);
+      objectAssociation = _.select(ModelElement.associated, {ref:relation.label})[relation.id].associated;
+      // for( iteration in 
+      db.insertRelationship(idSource,relation.el, relation.label,objectAssociation, function(err, result){ // let see if transition should support some properties... 
+        if(err) {
+          throw err;
+        } else {
+          relationid = result._id;
+          console.log("Reference created "+relation.label);
+          callback6();
+        }
+      });// end dbInsert 
 		}, function(err) {
-			//callback5(); //all relation are supposed to be pushed into DB
+			//callback5(); //all relation are supposed to be pushed into db
 		});		 
 		callback5();
 	}); //end parallel
 }
-
-/*
-function createNode(ModelElement) {
-	var pushObject = {};
-	var pushRelation = {};
-	var relationLabel;
-	var idSource;
-	//Insert a node conforms to the model schema
-	for(i in ModelElement.conformsTo().__attributes) {
-		pushObject[i] = ModelElement[i];
-	}
-	db.insertNode(pushObject , 
-			ModelElement.conformsTo().__name,
-			function(err, result) {
-			if(err) {
-				throw err;
-			} else {
-				idSource = result._id;
-				//console.log(idSource);
-				console.log('Object of Type: '+ModelElement.conformsTo().__name+' Added');
-				//console.log(pushObject); //dump object
-			}
-	});	
-	return idSource;
-}
-*/
