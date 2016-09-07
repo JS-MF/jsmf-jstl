@@ -24,7 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "lodash": "^4.1.0",
-    "jsmf-core": "git+ssh://git@git.list.lu:jsmf/jsmf-core.git#0.9.0"
+    "jsmf-core": "^0.10.0"
   },
   "devDependencies": {
     "should": "^7.1.1",
