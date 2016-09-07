@@ -23,6 +23,13 @@ Let's take a simple example from ATL (https://wiki.eclipse.org/ATL/Tutorials_-_C
 In this example, we first select all the element conform to *Member* of the Family metamodel (named *MMI*). Then, we filter (using lodash _.filter)
 and returning the result of the helper function *isFemale()*.
 ```javascript
+
+//Helper function
+function isFemale(member) {
+    //Warning writting the function name... checking empty table
+    return (member.familyMother.length!=0 || member.familyDaughter.length!=0);
+}
+
 var Member2Female = {
 
     in : function(inputModel) {
@@ -39,7 +46,20 @@ var Member2Female = {
         return [d];
     }
 }
-``` 
+
+
+Launching the transformation is made by creating a new Transformation then by adding the rules it contains.
+```javascript
+var transformation = new Transformation();
+transformation.addRule(Member2FeMale);
+transformation.addRule(Member2Male);
+```
+
+Execution of transformation rule is made using the apply function on a transformation. The parameters
+are the input Model and output model (as defined in JSMF).
+```javascript
+transformation.apply(M.ma, M.mb);
+```
 
 You can find examples, discover the other components and test it online with Tonic on JSMF github website (https://js-mf.github.io/#portfolio)
 
