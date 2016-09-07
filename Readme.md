@@ -46,7 +46,7 @@ var Member2Female = {
         return [d];
     }
 }
-
+```
 
 Launching the transformation is made by creating a new Transformation then by adding the rules it contains.
 ```javascript
@@ -55,10 +55,12 @@ transformation.addRule(Member2FeMale);
 transformation.addRule(Member2Male);
 ```
 
+
 Execution of transformation rule is made using the apply function on a transformation. The parameters
 are the input Model and output model (as defined in JSMF).
 ```javascript
 transformation.apply(M.ma, M.mb);
+
 ```
 
 You can find examples, discover the other components and test it online with Tonic on JSMF github website (https://js-mf.github.io/#portfolio)
