@@ -1,6 +1,6 @@
 {
   "name": "jsmf-jstl",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Model transformation for JSTL",
   "main": "index.js",
   "directories": {
@@ -24,12 +24,12 @@
   "license": "MIT",
   "dependencies": {
     "lodash": "^4.1.0",
-    "jsmf-core": "git+ssh://git@git.list.lu:jsmf/jsmf-core.git#0.10.0"
+    "jsmf-core": "^0.10.0"
   },
   "devDependencies": {
     "should": "^7.1.1",
     "mocha": "^2.5.3",
     "eyes": "^0.1.8",
-    "jsmf-magellan": "git+ssh://git@git.list.lu:jsmf/jsmf-magellan.git#0.6.0"
+    "jsmf-magellan": "^0.7.0"
   }
 }
