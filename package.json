@@ -1,6 +1,6 @@
 {
   "name": "jsmf-jstl",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Model transformation for JSTL",
   "main": "index.js",
   "directories": {
