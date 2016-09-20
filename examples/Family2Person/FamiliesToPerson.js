@@ -7,7 +7,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Authors : J.S. Sottet
  */
 
-var JSTL = require('../../index'); var Transformation = JSTL.Transformation;
+var JSTL = require('../../src/index'); var Transformation = JSTL.Transformation;
 var JSMF = require('jsmf-core'); var Model = JSMF.Model;
 
 //Load the metamodels (in one file for the example)

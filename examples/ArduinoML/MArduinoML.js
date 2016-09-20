@@ -1,64 +1,55 @@
 'use strict';
-var AML = require('./MMArduinoML')
 
-var Model;
+const AML = require('./MMArduinoML.js')
+const Model = require('jsmf-core').Model
 
-(function() {
-    var JSMF = require('jsmf-core');
-    Model = JSMF.Model;
-}).call();
 
-var switchExample = new Model('Switch!');
-switchExample.setReferenceModel(AML.ArduinoML);
-
-var button = AML.Sensor.newInstance({name: 'button', pin: 9});
-switchExample.add(button);
-var led = AML.Actuator.newInstance({name: 'led', pin: 13});
-switchExample.add(led);
+const button = AML.Sensor.newInstance({name: 'button', pin: 9})
+const led = AML.Actuator.newInstance({name: 'led', pin: 12})
 
 /*
  * on state
  */
 
-var aOn = AML.Action.newInstance({value: AML.Signal.HIGH, actuator: led});
-switchExample.add(aOn);
-var tOn = AML.Transition.newInstance({value: AML.Signal.LOW, sensor: button});
-switchExample.add(tOn);
-var on = AML.State.newInstance({name: 'on', action: aOn, transition: tOn})
-switchExample.add(on);
+const aOn = AML.Action.newInstance({value: AML.Signal.HIGH, actuator: led})
+const tOn = AML.Transition.newInstance({value: AML.Signal.HIGH, sensor: button})
+
+const on = AML.State.newInstance({name: 'on'})
+on.action = aOn
+on.transition = tOn
 
 /*
  * off state
  */
 
-var aOff = AML.Action.newInstance({value: AML.Signal.LOW, actuator: led});
-switchExample.add(aOff);
-var tOff = AML.Transition.newInstance({value: AML.Signal.LOW, sensor: button});
-switchExample.add(tOff);
-var off = AML.State.newInstance({name: 'off', action: aOff, transition: tOff})
-switchExample.add(off);
+const aOff = AML.Action.newInstance({value: AML.Signal.LOW, actuator: led})
+const tOff = AML.Transition.newInstance({value: AML.Signal.HIGH, sensor: button})
+const off = AML.State.newInstance({name: 'off'})
+off.action = aOff
+off.transition = tOff
 
 
 /*
  * set transitions
  */
-tOn.next = off;
-tOff.next = on;
+tOn.next = off
+tOff.next = on
 
 
 /*
  * define app
  */
 
-var switchApp = AML.App.newInstance({
-    name: 'Switch!',
-    brick: [button, led],
-    state: [on, off],
-    initial: off
-});
-switchExample.add(switchApp);
+const switchApp = AML.App.newInstance({
+  name: 'Switch!',
+  bricks: [button, led],
+  states: [on, off],
+  initial: off
+})
+
+const Switch = new Model('Switch', AML.ArduinoML, switchApp, true)
 
 module.exports = {
-    switchExample: switchExample,
-    switchApp: switchApp
+  Switch: Switch,
+  switchApp: switchApp
 }

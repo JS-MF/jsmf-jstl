@@ -1,4 +1,4 @@
-var JSTL = require('../../index'); var Transformation= JSTL.Transformation;
+var JSTL = require('../../src/index'); var Transformation= JSTL.Transformation;
 var JSMF = require('jsmf-core'); var Model = JSMF.Model; var Class = JSMF.Class;
 
 //Load the metamodels (in one file for the example)

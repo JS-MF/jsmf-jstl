@@ -10,7 +10,7 @@ Authors : Nicolas Biri
 'use strict'
 
 // model imports
-const JSTL = require('../../index')
+const JSTL = require('../../src/index')
 const Transformation = JSTL.Transformation
 const NAV = require('jsmf-magellan')
 const Model = require('jsmf-core').Model
@@ -24,99 +24,111 @@ const MMI = require('./MMArduinoML')
 const MMO = require('./MMAbstractCode')
 
 // input file
-const input = require('./MArduinoML').switchExample
+const input = require('./MArduinoML').Switch
 const output = new Model('Out')
 
-const transfo = new Transformation()
+const arduinoToCode = new Transformation()
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.App, x),
-    out: function(i) {
-        var app = MMO.App.newInstance()
-        this.assign(app, 'structural', [i])
-        this.assign(app, 'behavioural', [i])
-        return [app]
-    }
+arduinoToCode.addRule({
+  name: 'Arduino App to Code App',
+  in: x => NAV.allInstancesFromModel(MMI.App, x),
+  out: function(i) {
+    const app = MMO.App.newInstance()
+    this.assign(app, 'structural', [i])
+    this.assign(app, 'behavioural', [i])
+    return [app]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.App, x),
-    out: function(i) {
-        var s = MMO.StructuralConcerns.newInstance()
-        this.assign(s, 'alias', i.brick)
-        this.assign(s, 'pinMode', i.brick)
-        return [s]
-    }
+arduinoToCode.addRule({
+  name: 'Structural concerns generation',
+  in: x => NAV.allInstancesFromModel(MMI.App, x),
+  out: function(i) {
+    const s = MMO.StructuralConcerns.newInstance()
+    this.assign(s, 'alias', i.brick)
+    this.assign(s, 'pinMode', i.brick)
+    return [s]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.Brick, x),
-    out: function(i) {
-        return [MMO.BrickAlias.newInstance({name: i.name, pin: i.pin})]
-    }
+arduinoToCode.addRule({
+  name: 'Brick Alias generation',
+  in: x => NAV.allInstancesFromModel(MMI.Brick, x),
+  out: function(i) {
+    return [MMO.BrickAlias.newInstance({name: i.name, pin: i.pin})]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.Sensor, x),
-    out: function(i) {
-        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.INPUT})]
-    }
+arduinoToCode.addRule({
+  name: 'Pin mode definition for sensors',
+  in: x => NAV.allInstancesFromModel(MMI.Sensor, x),
+  out: function(i) {
+    return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.INPUT})]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.Actuator, x),
-    out: function(i) {
-        return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.OUTPUT})]
-    }
+arduinoToCode.addRule({
+  name: 'Pin mode definition for actuators',
+  in: x => NAV.allInstancesFromModel(MMI.Actuator, x),
+  out: function(i) {
+    return [MMO.PinMode.newInstance({name: i.name, mode: MMO.IO.OUTPUT})]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.App, x),
-    out: function(i) {
-        var b = MMO.BehaviouralConcerns.newInstance()
-        b.timeConfig = MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200})
-        this.assign(b, 'stateFunction', i.state)
-        this.assign(b, 'mainLoop', i.initial)
-        return [b]
-    }
+arduinoToCode.addRule({
+  name: 'Behavioural concerns generation',
+  in: x => NAV.allInstancesFromModel(MMI.App, x),
+  out: function(i) {
+    const b = MMO.BehaviouralConcerns.newInstance()
+    b.timeConfig = MMO.TimeConfig.newInstance({initialTime: 0, debounce: 200})
+    this.assign(b, 'stateFunction', i.state)
+    this.assign(b, 'mainLoop', i.initial)
+    return [b]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.State, x),
-    out: function(i) {
-        var t = i.transition[0]
-        var s = MMO.StateFunction.newInstance({
-            name: i.name,
-            next: t.next[0].name,
-            readOn: t.sensor[0].name,
-            read: t.value
-        })
-        this.assign(s, 'write', i.action)
-        return [s]
-    }
+arduinoToCode.addRule({
+  name: 'Generate state function',
+  in: x => NAV.allInstancesFromModel(MMI.State, x),
+  out: function(i) {
+    const t = i.transition[0]
+    const s = MMO.StateFunction.newInstance({
+      name: i.name,
+      next: t.next[0].name,
+      readOn: t.sensor[0].name,
+      read: t.value
+    })
+    this.assign(s, 'write', i.action)
+    return [s]
+  }
 })
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.State, x),
-    out: function(i) {
-        return [MMO.MainLoop.newInstance({ init: i.name })]
-    }
+arduinoToCode.addRule({
+  name: 'Generate main loop',
+  in: x => NAV.allInstancesFromModel(MMI.State, x),
+  out: function(i) {
+    return [MMO.MainLoop.newInstance({ init: i.name })]
+  }
 })
 
 
-transfo.addRule({
-    in: x => NAV.allInstancesFromModel(MMI.Action, x),
-    out: function(i) {
-      return [MMO.Write.newInstance({
-            on: i.actuator[0].name,
-            value: i.value
-        })]
-    }
+arduinoToCode.addRule({
+  name: 'Ganarate Writes',
+  in: x => NAV.allInstancesFromModel(MMI.Action, x),
+  out: function(i) {
+    return [MMO.Write.newInstance({
+      on: i.actuator[0].name,
+      value: i.value
+    })]
+  }
 })
 
 
 // launch transformation
 
-const log = transfo.apply(input, output, false)
+const mapping = arduinoToCode.apply(input, output, true)
 
-_.forEach(NAV.allInstancesFromModel(MMO.App, output), x => console.log(x.toCode()))
+module.exports = {arduinoToCode, mapping}
+
+_.forEach( NAV.allInstancesFromModel(MMO.App, output)
+         , x => console.log(x.toCode()))

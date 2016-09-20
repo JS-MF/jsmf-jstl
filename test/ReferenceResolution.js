@@ -2,7 +2,7 @@
 
 var should = require('should');
 var JSMF = require('jsmf-core');
-var JSTL = require('../index');
+var JSTL = require('../src/index');
 var _ = require('lodash');
 
 describe('References resolution', function() {

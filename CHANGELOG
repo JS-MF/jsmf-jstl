@@ -1,3 +1,5 @@
+v0.8:
+  - Add a JSMF Mapping model, to log transformation
 v0.7:
   - ES6 migration
 v0.6:

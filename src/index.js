@@ -1,22 +1,19 @@
-/**
+/** @license
+ *
  *   JavaScript Modelling Framework (JSMF)
  *
-©2015 Luxembourg Institute of Science and Technology All Rights Reserved
+©2015-2016 Luxembourg Institute of Science and Technology All Rights Reserved
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Authors : J.S. Sottet, A Vagner, N. Biri
 Contributors: G. Garcia-Frey
 
-* ideas to be implemented : could show transformation execution step by step, construct a model, etc.
-*   todo :
-            - Rule extension (inheritance)
-            - Multiple input/output models
-            - Hide the complex object for input
 */
 'use strict'
 
 const _ = require('lodash')
 const JSMF = require('jsmf-core')
+const Mapping = require('./Mapping')
 
 
 /** @constuctor
@@ -45,6 +42,15 @@ Transformation.prototype.addRule = function(r) {
   }
 }
 
+/** Add a set of transformation rules to a transformation module.
+ *  @param {Object} rules - the set of rules, each key correspond to a rule.
+ */
+Transformation.prototype.addRules = function(rules) {
+  _.forEach(rules, (rule, name) => {
+    rule.name = name
+    this.addRule(rule)
+  })
+}
 
 /** Add a helper to a transformation module.
  * @param {Object} h - the helper.
@@ -57,6 +63,15 @@ Transformation.prototype.addHelper = function(h) {
   } else {
     throw new TypeError(`Invalid helper: ${h}`)
   }
+}
+
+/** Add a set of transformation rules to a transformation module.
+ *  @param {Object} helpers - the set of helpers, each key correspond to a helper.
+ */
+Transformation.prototype.addHelpers = function(helpers) {
+  _.forEach(helpers, (helper, name) => {
+    this.addHelper({name, map: helper})
+  })
 }
 
 function Context() {
@@ -89,13 +104,13 @@ function Rule(selection, out, name) {
   this.name = name
 }
 
-function runRule(rule, context, inputModel, outputModel, debug) {
+function runRule(rule, context, inputModel, outputModel, extractMapping) {
   const selection = rule.in.call(context, inputModel)
   _.forEach(selection, function(e) {
     const generated = rule.out.call(context, e, inputModel)
     const value = (context.generated.get(e) || [])
     context.generated.set(e, value.concat(generated))
-    if (debug) {
+    if (extractMapping) {
       _.forEach(generated, function(x) {
         context.generationLog.set(x, {rule, source: e})
       })
@@ -113,7 +128,7 @@ function Helper(generation, name) {
   this.name = name
 }
 
-function runHelper(helper, context, inputModel, outputModel) {
+function runHelper(helper, context, inputModel) {
   const generated = helper.map.call(context, inputModel)
   context.helpers[helper.name] = generated
 }
@@ -138,7 +153,7 @@ function runResolution(resolution, generated) {
       _.each(values, target => {
         if (relationType === JSMF.JSMFAny
           || relationType === undefined
-          || hasClass(target, relationType)) {
+          || JSMF.hasClass(target, relationType)) {
           resolution.source[referenceFunctionName](target)
         }
       })
@@ -148,20 +163,18 @@ function runResolution(resolution, generated) {
 /** Apply a trsnformation on an input model, and put generated elements in a given ouput model.
  * @param {Object} inputModel - The input model.
  * @param {Object} outputModel - The output model.
- * @param {boolean} debug - Store additional information during the transformation.
+ * @param {boolean} extractMapping - Extract the mapping model during the transformation.
+ * @returns Nothing if extractMapping is set to false, a Mapping model otherwise.
  */
-Transformation.prototype.apply = function(inputModel, outputModel, debug) {
+Transformation.prototype.apply = function(inputModel, outputModel, extractMapping) {
   const ctx = new Context()
   outputModel = outputModel || new JSMF.Model('TransformationOutput')
-  _.forEach(this.helpers, h => runHelper(h, ctx, inputModel, outputModel))
-  _.forEach(this.rules, r => runRule(r, ctx, inputModel, outputModel, debug))
+  _.forEach(this.helpers, h => runHelper(h, ctx, inputModel))
+  _.forEach(this.rules, r => runRule(r, ctx, inputModel, outputModel, extractMapping))
   _.forEach(ctx.referencesResolutions, r => runResolution(r, ctx.generated))
-  return ctx
-}
-
-var hasClass = function (x, type) {
-  const types = type instanceof Array ? type : [type]
-  return _.some(x.conformsTo().getInheritanceChain(), c => _.includes(types, c))
+  if (extractMapping) {
+    return Mapping.buildMapping(ctx.generationLog, this)
+  }
 }
 
 module.exports = {Helper, Rule, Transformation}
